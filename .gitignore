@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+build/
+**/build/
+*.tsbuildinfo
+
+# Environment & secrets (keep *.example tracked)
+.env
+.env.*
+!.env.example
+**/.env
+!**/.env.example
+
+# Logs & debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Python (scan_chamdiemCV & scripts)
+venv/
+.venv/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg
+
+# Testing / coverage
+coverage/
+.nyc_output/
+**/.coverage
+
+# Caches
+.cache/
+.parcel-cache/
+.turbo/
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# Misc
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

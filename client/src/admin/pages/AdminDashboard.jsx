@@ -332,22 +332,30 @@ const AdminDashboard = () => {
             </Card>) : [{
           label: 'Tin tuyển dụng',
           value: stats?.totalJobs ?? 0,
-          path: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6'
+          path: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6',
+          bgClass: 'bg-primary/10 ring-1 ring-primary/20',
+          textClass: 'text-primary'
         }, {
           label: 'Ứng viên trong hệ thống',
           value: stats?.totalCandidates ?? 0,
-          path: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0 a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+          path: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0 a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+          bgClass: 'bg-blue-500/10 ring-1 ring-blue-500/20',
+          textClass: 'text-blue-600'
         }, {
           label: 'Tài khoản HR',
           value: stats?.totalHRs ?? 0,
-          path: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+          path: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+          bgClass: 'bg-indigo-500/10 ring-1 ring-indigo-500/20',
+          textClass: 'text-indigo-600'
         }, {
           label: 'Ứng viên được chọn',
           value: stats?.selectedCandidates ?? 0,
-          path: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+          path: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+          bgClass: 'bg-emerald-500/10 ring-1 ring-emerald-500/20',
+          textClass: 'text-emerald-600'
         }].map(c => <Card key={c.label} className="shadow-sm">
                 <CardContent className="flex items-center gap-4 pt-6">
-                  <div className="rounded-xl bg-primary/10 p-3 transition-colors duration-300"><svg className="h-6 w-6 stroke-current text-primary" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={c.path} /></svg></div>
+                  <div className={`rounded-xl p-3 transition-colors duration-300 ${c.bgClass}`}><svg className={`h-6 w-6 stroke-current ${c.textClass}`} fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={c.path} /></svg></div>
                   <div><p className="font-['Roboto'] text-sm font-medium text-muted-foreground">{c.label}</p><p className="font-['Open_Sans'] text-2xl font-bold text-foreground">{c.value}</p></div>
                 </CardContent>
               </Card>)}

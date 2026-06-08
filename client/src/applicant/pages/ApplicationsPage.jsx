@@ -21,10 +21,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ClipboardList, Download, MessageSquareText } from 'lucide-react';
 
+import { useToast } from '../../contexts/ToastContext';
+
 const PAGE_LIMIT = 10;
 
 const ApplicationsPage = () => {
   const { apiRequest } = useAuth();
+  const toast = useToast();
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,10 +53,10 @@ const ApplicationsPage = () => {
         const data = await response.json();
         if (data?.message) msg = data.message;
       } catch {}
-      alert(msg);
+      toast.error(msg);
     } catch (error) {
       console.error('Error opening application resume:', error);
-      alert('Mở hồ sơ bị lỗi. Vui lòng thử lại.');
+      toast.error('Mở hồ sơ bị lỗi. Vui lòng thử lại.');
     }
   };
 

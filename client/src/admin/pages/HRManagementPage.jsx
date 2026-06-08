@@ -16,7 +16,11 @@ import { useApiRequest } from '../../hooks/useApiRequest';
 import { formatDateVN } from '../adminDateFormat';
 import { AlertCircle, ChevronLeft, ChevronRight, Copy, Eye, EyeOff, KeyRound, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { useToast } from '@/contexts/ToastContext';
 const HRManagementPage = () => {
+  const toast = useToast();
+  const [hrToDelete, setHrToDelete] = useState(null);
   const {
     makeJsonRequest
   } = useApiRequest();
@@ -120,7 +124,7 @@ const HRManagementPage = () => {
   const handleCopyPassword = () => {
     if (newHR.password) {
       navigator.clipboard.writeText(newHR.password);
-      console.log('Password copied to clipboard!');
+      toast.success('Đã sao chép mật khẩu vào bộ nhớ tạm!');
     }
   };
   const handleAddHR = async () => {
@@ -154,11 +158,11 @@ const HRManagementPage = () => {
           });
           setShowAddModal(false);
           setShowPassword(false);
-          console.log('HR user created successfully!');
+          toast.success('Đã tạo tài khoản HR thành công!');
         }
       } catch (error) {
         console.error('Error creating HR user:', error);
-        setError(error.message || 'Không thể tạo tài khoản HR. Vui lòng thử lại.');
+        toast.error(error.message || 'Không thể tạo tài khoản HR. Vui lòng thử lại.');
       } finally {
         setSubmitting(false);
       }
@@ -213,11 +217,11 @@ const HRManagementPage = () => {
           });
           setShowAddModal(false);
           setShowPassword(false);
-          console.log('HR user updated successfully!');
+          toast.success('Đã cập nhật thông tin HR thành công!');
         }
       } catch (error) {
         console.error('Error updating HR user:', error);
-        setError(error.message || 'Không thể cập nhật tài khoản HR. Vui lòng thử lại.');
+        toast.error(error.message || 'Không thể cập nhật tài khoản HR. Vui lòng thử lại.');
       } finally {
         setSubmitting(false);
       }
@@ -226,19 +230,22 @@ const HRManagementPage = () => {
     }
   };
   const handleRemoveHR = async hrId => {
-    const confirmRemove = window.confirm("Bạn có chắc chắn muốn xóa tài khoản HR này không?");
-    if (confirmRemove) {
-      try {
-        setError(null);
-        await makeJsonRequest(`/api/admin/hr/${hrId}`, {
-          method: 'DELETE'
-        });
-        await loadHRUsers();
-        console.log('HR user removed successfully!');
-      } catch (error) {
-        console.error('Error removing HR user:', error);
-        setError(error.message || 'Không thể xóa tài khoản HR. Vui lòng thử lại.');
-      }
+    setHrToDelete(hrId);
+  };
+  const confirmDeleteHR = async () => {
+    if (!hrToDelete) return;
+    try {
+      setError(null);
+      await makeJsonRequest(`/api/admin/hr/${hrToDelete}`, {
+        method: 'DELETE'
+      });
+      await loadHRUsers();
+      toast.success('Đã xóa tài khoản HR thành công!');
+    } catch (error) {
+      console.error('Error removing HR user:', error);
+      toast.error(error.message || 'Không thể xóa tài khoản HR. Vui lòng thử lại.');
+    } finally {
+      setHrToDelete(null);
     }
   };
   const handleToggleStatus = async hrId => {
@@ -263,10 +270,11 @@ const HRManagementPage = () => {
           interviewPassed: Number(response.hr.interviewPassed) || 0
         };
         setHrs(hrs.map(hr => hr.id === hrId ? safeHr : hr));
+        toast.success(newStatus === 'active' ? 'Đã kích hoạt tài khoản HR!' : 'Đã vô hiệu hóa tài khoản HR!');
       }
     } catch (error) {
       console.error('Error toggling HR status:', error);
-      setError(error.message || 'Không thể cập nhật trạng thái HR. Vui lòng thử lại.');
+      toast.error(error.message || 'Không thể cập nhật trạng thái HR. Vui lòng thử lại.');
     }
   };
   const closeModal = () => {
@@ -338,8 +346,8 @@ const HRManagementPage = () => {
             <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
               <Card>
                 <CardContent className="flex items-center gap-4 pt-6">
-                  <div className="rounded-lg bg-muted p-3">
-                    <UserCheck className="size-6 text-muted-foreground" />
+                  <div className="rounded-lg bg-blue-500/10 p-3 ring-1 ring-blue-500/20">
+                    <UserCheck className="size-6 text-blue-600" />
                   </div>
                   <div>
                     <p className="font-['Roboto'] text-sm font-medium text-muted-foreground">HR đang hoạt động</p>
@@ -349,8 +357,8 @@ const HRManagementPage = () => {
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-4 pt-6">
-                  <div className="rounded-lg bg-muted p-3">
-                    <svg className="size-6 stroke-current text-muted-foreground" fill="none" viewBox="0 0 24 24">
+                  <div className="rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">
+                    <svg className="size-6 stroke-current text-primary" fill="none" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
                     </svg>
                   </div>
@@ -362,8 +370,8 @@ const HRManagementPage = () => {
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-4 pt-6">
-                  <div className="rounded-lg bg-muted p-3">
-                    <svg className="size-6 stroke-current text-muted-foreground" fill="none" viewBox="0 0 24 24">
+                  <div className="rounded-lg bg-amber-500/10 p-3 ring-1 ring-amber-500/20">
+                    <svg className="size-6 stroke-current text-amber-600" fill="none" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -375,8 +383,8 @@ const HRManagementPage = () => {
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-4 pt-6">
-                  <div className="rounded-lg bg-muted p-3">
-                    <svg className="size-6 stroke-current text-muted-foreground" fill="none" viewBox="0 0 24 24">
+                  <div className="rounded-lg bg-emerald-500/10 p-3 ring-1 ring-emerald-500/20">
+                    <svg className="size-6 stroke-current text-emerald-600" fill="none" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -651,6 +659,14 @@ const HRManagementPage = () => {
             )}
           </fieldset>
         </AdminModal>
+
+        <ConfirmDialog
+          open={hrToDelete !== null}
+          onClose={() => setHrToDelete(null)}
+          onConfirm={confirmDeleteHR}
+          title="Xóa tài khoản HR"
+          description="Bạn có chắc chắn muốn xóa tài khoản HR này không? Hành động này không thể hoàn tác."
+        />
       </div>
     </AdminLayout>;
 };

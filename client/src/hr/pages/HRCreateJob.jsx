@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApiRequest } from '../../hooks/useApiRequest';
+import { useToast } from '../../contexts/ToastContext';
 import HRLayout from '../layout/HRLayout';
 import { HR_PAGE, HR_H1, HR_SUBTITLE } from '../hrLayoutClasses';
 import { HR_INPUT_PILL, HR_TEXTAREA_PILL, HR_TOGGLE_TRACK } from '../hrFormClasses';
@@ -48,6 +49,7 @@ const INITIAL_JOB_STATE = {
 
 const HRCreateJob = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const {
     makeJsonRequest
   } = useApiRequest();
@@ -258,37 +260,37 @@ const HRCreateJob = () => {
     setIsSubmitting(true);
     try {
       if (!jobData.title.trim()) {
-        alert('Vui lòng nhập tên công việc');
+        toast.warning('Vui lòng nhập tên công việc');
         return;
       }
       if (!jobData.description.trim()) {
-        alert('Vui lòng nhập mô tả công việc');
+        toast.warning('Vui lòng nhập mô tả công việc');
         return;
       }
       if (!jobData.department && !jobData.customDepartment.trim()) {
-        alert('Vui lòng chọn phòng ban');
+        toast.warning('Vui lòng chọn phòng ban');
         return;
       }
       if (jobData.department === 'Khác' && !jobData.customDepartment.trim()) {
-        alert('Vui lòng nhập phòng ban khi chọn "Khác"');
+        toast.warning('Vui lòng nhập phòng ban khi chọn "Khác"');
         return;
       }
       if (jobData.qualification.length === 0 && jobData.customQualifications.length === 0) {
-        alert('Vui lòng chọn ít nhất một bằng cấp/yêu cầu');
+        toast.warning('Vui lòng chọn ít nhất một bằng cấp/yêu cầu');
         return;
       }
       if (!jobData.experienceLevel) {
-        alert('Vui lòng chọn cấp bậc kinh nghiệm');
+        toast.warning('Vui lòng chọn cấp bậc kinh nghiệm');
         return;
       }
       if (!jobData.applicationDeadline) {
-        alert('Vui lòng chọn hạn nộp hồ sơ');
+        toast.warning('Vui lòng chọn hạn nộp hồ sơ');
         return;
       }
       if (jobData.atsEnabled) {
         const threshold = Number(jobData.atsResumeThreshold);
         if (Number.isNaN(threshold) || threshold < 0 || threshold > 100) {
-          alert('Ngưỡng điểm sàng lọc hồ sơ phải từ 0 đến 100.');
+          toast.warning('Ngưỡng điểm sàng lọc hồ sơ phải từ 0 đến 100.');
           return;
         }
       }
@@ -336,7 +338,7 @@ const HRCreateJob = () => {
         body: JSON.stringify(submitData)
       });
       if (response.success) {
-        alert(`Tin tuyển dụng đã ${status === 'draft' ? 'được lưu bản nháp' : 'được đăng'} thành công!`);
+        toast.success(`Tin tuyển dụng đã ${status === 'draft' ? 'được lưu bản nháp' : 'được đăng'} thành công!`);
         navigate('/hr/jobs', {
           state: {
             refreshJobs: true
@@ -344,16 +346,16 @@ const HRCreateJob = () => {
         });
       } else {
         console.error('Job creation failed:', response);
-        alert(response.message || 'Không thể tạo tin tuyển dụng');
+        toast.error(response.message || 'Không thể tạo tin tuyển dụng');
       }
     } catch (error) {
       console.error('Error submitting job:', error);
       const errMsg = String(error?.message || '');
       if (errMsg === 'Authentication required' || errMsg.includes('401') || /đăng nhập|xác thực/i.test(errMsg)) {
-        alert('Phiên làm việc hết hạn hoặc chưa đăng nhập. Vui lòng đăng nhập lại.');
+        toast.error('Phiên làm việc hết hạn hoặc chưa đăng nhập. Vui lòng đăng nhập lại.');
         navigate('/login');
       } else {
-        alert(errMsg || 'Không thể tạo tin tuyển dụng');
+        toast.error(errMsg || 'Không thể tạo tin tuyển dụng');
       }
     } finally {
       setIsSubmitting(false);

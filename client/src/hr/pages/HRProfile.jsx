@@ -11,6 +11,7 @@ import { HR_INPUT_PILL } from "../hrFormClasses";
 import { formatDateVN } from "../hrDateFormat";
 import { useAuth } from "../../contexts/AuthContext";
 import { useApiRequest } from "../../hooks/useApiRequest";
+import { useToast } from "../../contexts/ToastContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { Loader2, AlertCircle, Pencil, Check, X, User } from "lucide-react";
 const HRProfile = () => {
+  const toast = useToast();
   const { user, updateUser } = useAuth();
   const { makeJsonRequest } = useApiRequest();
   const [isEditing, setIsEditing] = useState(false);
@@ -122,7 +124,7 @@ const HRProfile = () => {
       if (response) {
         setIsEditing(false);
         setOriginalProfileData(profileData);
-        alert("Cập nhật hồ sơ thành công!");
+        toast.success("Cập nhật hồ sơ thành công!");
       }
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -297,7 +299,7 @@ const HRProfile = () => {
                 ...user,
                 avatar: response.avatarData,
               });
-              alert("Cập nhật ảnh đại diện thành công!");
+              toast.success("Cập nhật ảnh đại diện thành công!");
             } else {
               setError(response?.error || "Tải ảnh đại diện thất bại.");
             }

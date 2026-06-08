@@ -12,6 +12,7 @@ import { formatDateVN } from '../hrDateFormat';
 import { recruitmentJobIdRaw } from '../hrApplicationCode';
 import { hrStatusBadgeClass, hrScoreTextClass } from '../hrTheme';
 import { getInterviewPassFailLabel, getInterviewPassFailBadgeKey } from '../../utils/applicationStatusDisplay';
+import { useToast } from '../../contexts/ToastContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -114,6 +115,7 @@ const emptyInterviewOutcomeModal = () => ({
   submitting: false
 });
 const HRApplicationManagement = () => {
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const jobIdFromUrl = searchParams.get('jobId');
   const {
@@ -450,14 +452,14 @@ const HRApplicationManagement = () => {
         };
       } else {
         console.error('Failed to update status:', result.error);
-        alert(result.error || 'Không thể cập nhật trạng thái hồ sơ.');
+        toast.error(result.error || 'Không thể cập nhật trạng thái hồ sơ.');
         return {
           success: false
         };
       }
     } catch (error) {
       console.error('Error updating application status:', error);
-      alert('Đã xảy ra lỗi khi cập nhật trạng thái hồ sơ.');
+      toast.error('Đã xảy ra lỗi khi cập nhật trạng thái hồ sơ.');
       return {
         success: false
       };
@@ -468,22 +470,22 @@ const HRApplicationManagement = () => {
     if (statusReasonModal.status === 'interview_scheduled') {
       const f = statusReasonModal.inviteForm || DEFAULT_INVITE_FORM;
       if (!f.expectedDate || !f.expectedTime) {
-        alert('Vui lòng chọn ngày và giờ dự kiến phỏng vấn.');
+        toast.warning('Vui lòng chọn ngày và giờ dự kiến phỏng vấn.');
         return;
       }
       if (!(f.venueOrLink || '').trim()) {
-        alert('Vui lòng nhập địa điểm hoặc liên kết họp trực tuyến.');
+        toast.warning('Vui lòng nhập địa điểm hoặc liên kết họp trực tuyến.');
         return;
       }
       reason = buildInterviewInviteNotes(f);
       if (!reason.trim()) {
-        alert('Vui lòng điền đủ thông tin mời phỏng vấn.');
+        toast.warning('Vui lòng điền đủ thông tin mời phỏng vấn.');
         return;
       }
     } else {
       reason = (statusReasonModal.reason || '').trim();
       if (!reason) {
-        alert('Vui lòng nhập lý do từ chối để gửi thông báo cho ứng viên.');
+        toast.warning('Vui lòng nhập lý do từ chối để gửi thông báo cho ứng viên.');
         return;
       }
     }
@@ -496,7 +498,7 @@ const HRApplicationManagement = () => {
       const f = statusReasonModal.inviteForm || DEFAULT_INVITE_FORM;
       const iso = buildInterviewScheduledIso(f);
       if (!iso) {
-        alert('Vui lòng chọn ngày và giờ phỏng vấn.');
+        toast.warning('Vui lòng chọn ngày và giờ phỏng vấn.');
         setStatusReasonModal(prev => ({ ...prev, submitting: false }));
         return;
       }
@@ -518,7 +520,7 @@ const HRApplicationManagement = () => {
   const handleConfirmInterviewOutcome = async () => {
     const trimmed = (interviewOutcomeModal.reason || '').trim();
     if (!trimmed) {
-      alert('Vui lòng nhập nhận xét hoặc lý do gửi tới ứng viên.');
+      toast.warning('Vui lòng nhập nhận xét hoặc lý do gửi tới ứng viên.');
       return;
     }
     const newStatus = interviewOutcomeModal.outcome === 'passed' ? 'interview_passed' : 'rejected';
@@ -1103,11 +1105,11 @@ const HRApplicationManagement = () => {
                         setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
                       } else {
                         const errorData = await response.json();
-                        alert(errorData.message || 'Tải hồ sơ bị lỗi. Vui lòng thử lại.');
+                        toast.error(errorData.message || 'Tải hồ sơ bị lỗi. Vui lòng thử lại.');
                       }
                     } catch (error) {
                       console.error('Error opening resume:', error);
-                      alert('Mở hồ sơ bị lỗi. Vui lòng thử lại.');
+                      toast.error('Mở hồ sơ bị lỗi. Vui lòng thử lại.');
                     }
                   }}
                 >

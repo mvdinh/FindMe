@@ -10,8 +10,12 @@ import { Bell, Trash2 } from 'lucide-react';
 import { formatDateVN } from '../adminDateFormat';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import { useAuth } from '../../contexts/AuthContext';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { useToast } from '@/contexts/ToastContext';
 
 const AdminNotifications = () => {
+  const toast = useToast();
+  const [notifyToDelete, setNotifyToDelete] = React.useState(null);
   const { items: notifications, unreadCount, markRead, markAllRead, refresh } = useNotifications();
   const { token } = useAuth();
   const [selectedNotifications, setSelectedNotifications] = React.useState([]);
@@ -64,10 +68,32 @@ const AdminNotifications = () => {
       });
       if (!res.ok) throw new Error('Không xóa được thông báo');
       if (typeof refresh === 'function') await refresh();
+      toast.success('Đã xóa các thông báo đã chọn!');
       setSelectedNotifications([]);
       setShowDeleteConfirm(false);
     } catch (e) {
       console.error('Admin bulk delete failed', e);
+      toast.error(e.message || 'Không xóa được thông báo');
+    }
+  };
+
+  const confirmDeleteSingleNotify = async () => {
+    if (!notifyToDelete) return;
+    try {
+      const res = await fetch(`/api/notifications/${notifyToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      if (!res.ok) throw new Error('Không xóa được thông báo');
+      if (typeof refresh === 'function') await refresh();
+      toast.success('Đã xóa thông báo thành công!');
+    } catch (err) {
+      console.error('Admin single delete failed', err);
+      toast.error(err.message || 'Không xóa được thông báo');
+    } finally {
+      setNotifyToDelete(null);
     }
   };
 
@@ -292,19 +318,7 @@ const AdminNotifications = () => {
                             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                             title="Xóa"
                             onClick={async () => {
-                              if (!window.confirm("Bạn có chắc chắn muốn xóa thông báo này không?")) return;
-                              try {
-                                const res = await fetch(`/api/notifications/${n._id}`, {
-                                  method: 'DELETE',
-                                  headers: {
-                                    ...(token ? { Authorization: `Bearer ${token}` } : {})
-                                  }
-                                });
-                                if (!res.ok) throw new Error('Không xóa được thông báo');
-                                if (typeof refresh === 'function') await refresh();
-                              } catch (err) {
-                                console.error('Admin single delete failed', err);
-                              }
+                              setNotifyToDelete(n._id);
                             }}
                           >
                             <Trash2 className="size-4" />
@@ -333,26 +347,21 @@ const AdminNotifications = () => {
         </Card>
       </div>
 
-      <AdminModal
+      <ConfirmDialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        size="md"
+        onConfirm={deleteSelectedNotifications}
         title="Xóa thông báo"
-        footer={
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
-              Hủy
-            </Button>
-            <Button type="button" variant="destructive" onClick={deleteSelectedNotifications}>
-              Xóa
-            </Button>
-          </div>
-        }
-      >
-        <p className="font-['Roboto'] text-muted-foreground">
-          Bạn có chắc chắn muốn xóa {selectedNotifications.length} thông báo đã chọn? Hành động này không thể hoàn tác.
-        </p>
-      </AdminModal>
+        description={`Bạn có chắc chắn muốn xóa ${selectedNotifications.length} thông báo đã chọn? Hành động này không thể hoàn tác.`}
+      />
+
+      <ConfirmDialog
+        open={notifyToDelete !== null}
+        onClose={() => setNotifyToDelete(null)}
+        onConfirm={confirmDeleteSingleNotify}
+        title="Xóa thông báo"
+        description="Bạn có chắc chắn muốn xóa thông báo này không? Hành động này không thể hoàn tác."
+      />
     </AdminLayout>
   );
 };

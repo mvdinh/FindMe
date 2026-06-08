@@ -373,11 +373,6 @@ Embedding + Reranking + Rule-based
 
 ---
 
-# 👨‍💻 Tác giả
-
-Minh Quân
-
----
 
 ```sh
 python -m venv venv

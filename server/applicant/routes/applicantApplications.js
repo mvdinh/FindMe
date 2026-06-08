@@ -121,6 +121,7 @@ async function getApplicantActiveResume(applicantId) {
   });
 }
 
+// api nộp CV ứng tuyển + call AI + ATS auto reject
 router.post('/', auth, upload.single('customResume'), async (req, res) => {
   try {
     const applicantId = req.user?.id;
@@ -597,6 +598,8 @@ router.post('/', auth, upload.single('customResume'), async (req, res) => {
     });
   }
 });
+
+// api lấy danh sách CV ứng tuyển 
 router.get('/', auth, async (req, res) => {
   try {
     const applicantId = req.user.id;
@@ -647,6 +650,8 @@ router.get('/', auth, async (req, res) => {
     });
   }
 });
+
+//api xem danh sách lịch phỏng vấn
 router.get('/confirm-interview/preview', auth, query('applicationId').isMongoId().withMessage('applicationId không hợp lệ'), async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -709,6 +714,8 @@ router.get('/confirm-interview/preview', auth, query('applicationId').isMongoId(
     });
   }
 });
+
+//api xác nhận lịch phỏng vấn 
 router.post('/confirm-interview', auth, [body('applicationId').isMongoId().withMessage('applicationId không hợp lệ')], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -813,6 +820,8 @@ router.post('/confirm-interview', auth, [body('applicationId').isMongoId().withM
     });
   }
 });
+
+//api xem chi tiết đơn ứng tuyển 
 router.get('/:id', auth, async (req, res) => {
   try {
     const applicationId = req.params.id;

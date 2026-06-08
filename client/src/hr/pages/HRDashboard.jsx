@@ -75,6 +75,8 @@ const HRDashboard = () => {
     const map = {
       active: 'Đang đăng tuyển',
       draft: 'Bản nháp',
+      closed: 'Đã đóng',
+      inactive: 'Không hoạt động',
       confirmed: 'Đã xác nhận',
       scheduled: 'Đã lên lịch',
       shortlisted: 'Đang xem xét',

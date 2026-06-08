@@ -13,8 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Briefcase, Download, FileText, FolderCode, GraduationCap, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { AlertCircle, Briefcase, Download, FileText, FolderCode, GraduationCap, Loader2, Briefcase as BriefcaseIcon, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { CAREER_FIELD_OPTIONS, getSuggestedSkillsByCareerField } from '../../utils/careerSkillSuggestions';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { useToast } from '../../contexts/ToastContext';
 
 const ProfilePage = () => {
   const {
@@ -23,6 +25,9 @@ const ProfilePage = () => {
     refreshUser,
     user
   } = useAuth();
+  const toast = useToast();
+  const [showDeleteAvatarConfirm, setShowDeleteAvatarConfirm] = useState(false);
+  const [showDeleteResumeConfirm, setShowDeleteResumeConfirm] = useState(false);
   const {
     makeJsonRequest
   } = useApiRequest();
@@ -344,7 +349,7 @@ const ProfilePage = () => {
             if (avatarFileInputRef.current) {
               avatarFileInputRef.current.value = '';
             }
-            alert('Cập nhật ảnh đại diện thành công!');
+            toast.success('Cập nhật ảnh đại diện thành công!');
           } else {
             setError(response?.error || 'Tải ảnh đại diện thất bại.');
           }
@@ -383,7 +388,7 @@ const ProfilePage = () => {
       if (avatarFileInputRef.current) {
         avatarFileInputRef.current.value = '';
       }
-      alert('Đã xóa ảnh đại diện.');
+      toast.success('Đã xóa ảnh đại diện thành công!');
     } catch (err) {
       console.error('Error deleting profile picture:', err);
       const serverMsg = err?.response?.data?.message || err?.response?.data?.error;
@@ -455,6 +460,7 @@ const ProfilePage = () => {
       if (response.ok) {
         const responseData = await response.json();
         if (responseData.success) {
+          toast.success('Đã xóa CV thành công!');
           setFormData(prev => ({
             ...prev,
             resume: null
@@ -682,7 +688,7 @@ const ProfilePage = () => {
                           >
                             Tải ảnh lên
                           </Button>
-                          {formData.profilePicture ? <Button type="button" variant="outline" size="sm" onClick={deleteProfilePicture} disabled={isDeletingPicture || isUploadingPicture} className="gap-2 font-['Roboto'] text-destructive hover:text-destructive">
+                          {formData.profilePicture ? <Button type="button" variant="outline" size="sm" onClick={() => setShowDeleteAvatarConfirm(true)} disabled={isDeletingPicture || isUploadingPicture} className="gap-2 font-['Roboto'] text-destructive hover:text-destructive">
                               {isDeletingPicture ? <>
                                   <Loader2 className="size-3.5 animate-spin" />
                                   Đang xóa...
@@ -792,7 +798,7 @@ const ProfilePage = () => {
                           <Download className="size-5" />
                         </Button>
                         
-                        {isEditing && <Button type="button" variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={handleResumeDelete} title="Xóa CV">
+                        {isEditing && <Button type="button" variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setShowDeleteResumeConfirm(true)} title="Xóa CV">
                             <Trash2 className="size-5" />
                           </Button>}
                       </div>
@@ -1170,6 +1176,22 @@ const ProfilePage = () => {
                 </fieldset>
               </form>
         </ApplicantModal>
+
+        <ConfirmDialog
+          open={showDeleteAvatarConfirm}
+          onClose={() => setShowDeleteAvatarConfirm(false)}
+          onConfirm={deleteProfilePicture}
+          title="Xóa ảnh đại diện"
+          description="Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại không?"
+        />
+
+        <ConfirmDialog
+          open={showDeleteResumeConfirm}
+          onClose={() => setShowDeleteResumeConfirm(false)}
+          onConfirm={handleResumeDelete}
+          title="Xóa CV"
+          description="Bạn có chắc chắn muốn xóa tệp CV hiện tại không? Hành động này không thể hoàn tác."
+        />
       </div>
     </ApplicantLayout>;
 };

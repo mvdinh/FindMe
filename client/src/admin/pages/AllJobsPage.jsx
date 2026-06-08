@@ -301,9 +301,9 @@ const AllJobsPage = () => {
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 justify-center items-center">
           <Card>
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-muted p-3">
+              <div className="rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">
                 <svg
-                  className="size-6 stroke-current text-muted-foreground"
+                  className="size-6 stroke-current text-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -327,9 +327,9 @@ const AllJobsPage = () => {
           </Card>
           <Card>
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-muted p-3">
+              <div className="rounded-lg bg-sky-500/10 p-3 ring-1 ring-sky-500/20">
                 <svg
-                  className="size-6 stroke-current text-muted-foreground"
+                  className="size-6 stroke-current text-sky-600"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -353,9 +353,9 @@ const AllJobsPage = () => {
           </Card>
           <Card>
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-muted p-3">
+              <div className="rounded-lg bg-blue-500/10 p-3 ring-1 ring-blue-500/20">
                 <svg
-                  className="size-6 stroke-current text-muted-foreground"
+                  className="size-6 stroke-current text-blue-600"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -379,9 +379,9 @@ const AllJobsPage = () => {
           </Card>
           <Card>
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-muted p-3">
+              <div className="rounded-lg bg-emerald-500/10 p-3 ring-1 ring-emerald-500/20">
                 <svg
-                  className="size-6 stroke-current text-muted-foreground"
+                  className="size-6 stroke-current text-emerald-600"
                   fill="none"
                   viewBox="0 0 24 24"
                 >

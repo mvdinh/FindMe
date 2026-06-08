@@ -26,7 +26,6 @@ const auth = async (req, res, next) => {
         message: 'Token is not valid'
       });
     }
-    // Force-logout disabled / non-active accounts
     if (user.isActive === false) {
       return res.status(401).json({
         success: false,

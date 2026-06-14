@@ -5,6 +5,12 @@ const {
   body,
   validationResult
 } = require('express-validator');
+/**
+ * Hàm phụ trợ: Bóc tách chuỗi bằng cấp thành tên bằng cấp và chuyên ngành.
+ * Ví dụ: "Cử nhân - CNTT" -> qualification: "Cử nhân", fieldOfStudy: "CNTT"
+ * @param {string} degreeRaw - Chuỗi thông tin bằng cấp cần xử lý
+ * @returns {object} Object chứa qualification và fieldOfStudy
+ */
 const parseEducationDegree = degreeRaw => {
   const degree = (degreeRaw || '').toString().trim();
   if (!degree) return { qualification: '', fieldOfStudy: '' };
@@ -31,6 +37,12 @@ const parseEducationDegree = degreeRaw => {
   }
   return { qualification: degree, fieldOfStudy: '' };
 };
+/**
+ * API Endpoint: Lấy thông tin hồ sơ (Profile) của ứng viên.
+ * - Truy vấn thông tin người dùng theo ID trong token đăng nhập.
+ * - Tìm kiếm CV hiện tại đang được kích hoạt.
+ * - Cấu trúc lại dữ liệu về học vấn, kinh nghiệm làm việc, kỹ năng, dự án để trả về cho Client.
+ */
 const getProfile = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -69,11 +81,12 @@ const getProfile = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
-      fullName: `${user.firstName} ${user.lastName}`,
+      fullName: `${user.lastName} ${user.firstName}`,
       email: user.email,
       phone: user.phone || '',
       location: user.profile?.currentLocation || user.location || '',
       summary: user.profile?.summary || '',
+      careerField: user.profile?.careerField || '',
       lastPasswordChange: user.lastPasswordChange || null,
       profilePicture: user.profilePicture || user.avatar || '',
       avatar: user.profilePicture || user.avatar || '',
@@ -159,6 +172,13 @@ const getProfile = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Cập nhật thông tin hồ sơ cá nhân.
+ * - Xử lý kiểm tra dữ liệu đầu vào (Validation).
+ * - Bóc tách Họ và Tên từ chuỗi họ tên đầy đủ (fullName).
+ * - Chuẩn hóa lại mảng thông tin học vấn (education) và kinh nghiệm làm việc (workExperience).
+ * - Lưu các thay đổi vào CSDL.
+ */
 const updateProfile = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -183,8 +203,8 @@ const updateProfile = async (req, res) => {
     } = req.body;
     const fullNameStr = fullName ? fullName.toString().trim() : '';
     const nameParts = fullNameStr.split(' ').filter(part => part.length > 0);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    const lastName = nameParts[0] || '';
+    const firstName = nameParts.slice(1).join(' ') || '';
     const educationEntries = education?.map(edu => {
       const parsedDegree = parseEducationDegree(edu.degree);
       return {
@@ -239,7 +259,7 @@ const updateProfile = async (req, res) => {
       success: true,
       message: 'Profile updated successfully',
       data: {
-        fullName: `${updatedUser.firstName} ${updatedUser.lastName}`,
+        fullName: `${updatedUser.lastName} ${updatedUser.firstName}`,
         phone: updatedUser.phone,
         location: updatedUser.profile?.currentLocation || updatedUser.location,
         careerField: updatedUser.profile?.careerField || '',
@@ -255,6 +275,11 @@ const updateProfile = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Tải xuống hoặc xem trước CV hiện tại đang kích hoạt.
+ * - Tìm CV trong cơ sở dữ liệu dựa trên currentResumeId của User.
+ * - Trả về Base64 data (fileData) cùng các thông tin loại tệp (mimeType) để Client xử lý.
+ */
 const downloadCurrentResume = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -305,6 +330,11 @@ const downloadCurrentResume = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Xóa CV hiện tại của ứng viên.
+ * - Tìm CV đang kích hoạt, xóa khỏi DB Collection Resume.
+ * - Xóa liên kết (ID) của CV bị xóa khỏi tài liệu User tương ứng.
+ */
 const deleteCurrentResume = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -362,6 +392,12 @@ const deleteCurrentResume = async (req, res) => {
     });
   }
 };
+/**
+ * Middleware: Chuỗi quy tắc xác thực (Validation) cho form cập nhật hồ sơ.
+ * - Đảm bảo họ tên dài từ 2 đến 100 ký tự.
+ * - Kiểm tra định dạng số điện thoại chuẩn Việt Nam.
+ * - Kiểm tra giới hạn ký tự của phần giới thiệu (summary) và địa điểm (location).
+ */
 const validateProfileUpdate = [body('fullName').trim().isLength({
   min: 2,
   max: 100
@@ -378,6 +414,13 @@ body('location').trim().optional({
 }).isLength({
   max: 1000
 }).withMessage('Summary must not exceed 1000 characters'), body('skills').optional().isArray().withMessage('Skills must be an array'), body('education').optional().isArray().withMessage('Education must be an array'), body('workExperience').optional().isArray().withMessage('Work experience must be an array'), body('projects').optional().isArray().withMessage('Projects must be an array')];
+/**
+ * API Endpoint: Cập nhật ảnh đại diện (Avatar).
+ * - Xử lý chuỗi ảnh Base64.
+ * - Kiểm tra định dạng có đúng là ảnh hay không.
+ * - Tính toán và chặn ảnh vượt quá giới hạn 5MB.
+ * - Lưu chuỗi Base64 vào DB của User.
+ */
 const updateAvatar = async (req, res) => {
   try {
     const {
@@ -430,6 +473,10 @@ const updateAvatar = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Xóa ảnh đại diện.
+ * - Xóa chuỗi Base64 của ảnh trong tài liệu User.
+ */
 const deleteAvatar = async (req, res) => {
   try {
     const user = await User.findById(req.user._id || req.user.id);
@@ -461,6 +508,12 @@ const deleteAvatar = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Đổi mật khẩu tài khoản.
+ * - Xác thực mật khẩu cũ bằng bcrypt.compare.
+ * - Kiểm tra độ dài mật khẩu mới.
+ * - Băm (hash) mật khẩu mới và lưu vào DB, cập nhật thời gian đổi mật khẩu gần nhất.
+ */
 const changePassword = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;

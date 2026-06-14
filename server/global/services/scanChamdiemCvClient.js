@@ -1,5 +1,8 @@
 const DEFAULT_TIMEOUT_MS = parseInt(process.env.ATS_SCAN_TIMEOUT_MS, 10) || 120000;
 
+/**
+ * Hàm phụ trợ: Ghi log cho quá trình gọi API sang microservice ATS (Chấm điểm CV).
+ */
 function logAts(event, detail) {
   if (detail !== undefined) {
     console.info('[ATS scan_chamdiemCV]', event, detail);
@@ -8,6 +11,9 @@ function logAts(event, detail) {
   }
 }
 
+/**
+ * Hàm phụ trợ: Lấy URL gốc (Base URL) của máy chủ ATS (Python/FastAPI) từ biến môi trường.
+ */
 function normalizeBase(baseUrlOverride) {
   const b = String(baseUrlOverride ?? process.env.ATS_SCAN_API_URL ?? '').trim();
   if (!b) {
@@ -16,6 +22,10 @@ function normalizeBase(baseUrlOverride) {
   return b.replace(/\/$/, '');
 }
 
+/**
+ * Hàm phụ trợ: Gửi request HTTP (fetch) sang máy chủ ATS kèm theo xử lý Timeout
+ * và bắt lỗi (Error Handling) thống nhất.
+ */
 async function fetchScan(baseUrlOverride, path, options = {}) {
   const base = normalizeBase(baseUrlOverride);
   const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
@@ -50,6 +60,9 @@ async function fetchScan(baseUrlOverride, path, options = {}) {
   }
 }
 
+/**
+ * API Client: Kiểm tra trạng thái máy chủ ATS (Health check).
+ */
 async function getRoot(baseUrlOverride) {
   return fetchScan(baseUrlOverride, '/', { method: 'GET' });
 }
@@ -58,6 +71,9 @@ async function listCvs(baseUrlOverride) {
   return fetchScan(baseUrlOverride, '/api/cv/', { method: 'GET' });
 }
 
+/**
+ * API Client: Upload file CV (dạng Buffer) lên máy chủ ATS.
+ */
 async function uploadCv(fileBuffer, filename, baseUrlOverride) {
   const base = normalizeBase(baseUrlOverride);
   const uploadUrl = `${base}/api/cv/upload`;
@@ -101,11 +117,18 @@ async function listJobs(baseUrlOverride) {
   return fetchScan(baseUrlOverride, '/api/job/', { method: 'GET' });
 }
 
+/**
+ * API Client: Tạo (lưu) mô tả công việc (Job) trên máy chủ ATS để làm dữ liệu đối sánh.
+ */
 async function createJob(jobText, baseUrlOverride) {
   const q = new URLSearchParams({ job_text: String(jobText ?? '') });
   return fetchScan(baseUrlOverride, `/api/job/create?${q.toString()}`, { method: 'POST' });
 }
 
+/**
+ * API Client: (Quan trọng) So khớp và tính điểm độ phù hợp giữa nội dung Text CV và Text Job.
+ * Gọi endpoint `/api/analyze/match` của máy chủ ATS. Trả về JSON điểm số và đánh giá chi tiết.
+ */
 async function analyzeMatch(cvText, jobText, baseUrlOverride) {
   const base = normalizeBase(baseUrlOverride);
   const matchUrl = `${base}/api/analyze/match`;
@@ -157,11 +180,17 @@ async function analyzeMatch(cvText, jobText, baseUrlOverride) {
   }
 }
 
+/**
+ * API Client: So khớp CV và Job dựa trên ID đã lưu trên máy chủ ATS.
+ */
 async function analyzeByIds(cvId, jobId, baseUrlOverride) {
   const q = new URLSearchParams({ cv_id: String(cvId), job_id: String(jobId) });
   return fetchScan(baseUrlOverride, `/api/analyze/?${q.toString()}`, { method: 'POST' });
 }
 
+/**
+ * API Client: Lấy danh sách CV phù hợp nhất cho một Job (Rank/Xếp hạng).
+ */
 async function rank(jobId, topK, baseUrlOverride) {
   const q = new URLSearchParams({ job_id: String(jobId), top_k: String(topK ?? 5) });
   return fetchScan(baseUrlOverride, `/api/rank/?${q.toString()}`, { method: 'GET' });

@@ -133,7 +133,7 @@ const interviewSchema = new mongoose.Schema({
     },
     recipient: {
       type: String,
-      enum: ['hr', 'candidate', 'both']
+      enum: ['recruiter', 'candidate', 'both']
     },
     scheduledTime: Date,
     sent: {

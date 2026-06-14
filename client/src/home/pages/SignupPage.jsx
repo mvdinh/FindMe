@@ -273,6 +273,7 @@ const SignupPage = () => {
       formDataToSubmit.append('currentLocation', formData.currentLocation.trim());
       formDataToSubmit.append('currentStatus', formData.currentStatus);
       formDataToSubmit.append('careerField', formData.careerField);
+      formDataToSubmit.append('role', 'applicant');
       const educationData = formData.educationEntries.map(entry => ({
         qualification: entry.qualification,
         fieldOfStudy: entry.fieldOfStudy.trim(),
@@ -330,7 +331,7 @@ const SignupPage = () => {
       setIsSubmitting(false);
     }
   };
-  return <main className="flex w-full flex-col md:flex-row overflow-hidden bg-white dark:bg-gray-900 transition-colors duration-300 mt-16 min-h-[calc(100svh-4rem)] md:h-[calc(100svh-4rem)] md:min-h-0">
+  return <main className="flex w-full flex-col md:flex-row overflow-hidden bg-white dark:bg-gray-900 transition-colors duration-300 min-h-screen md:h-screen md:min-h-0">
       <div className="relative flex w-full flex-col items-center justify-center bg-[#EE0000] p-10 md:w-1/2 overflow-hidden md:h-full md:flex-shrink-0">
         <div className="absolute inset-0 z-0 pointer-events-none">
           <img src="/slider1.webp" alt="" aria-hidden="true" className="h-full w-full object-cover opacity-35 mix-blend-overlay" />
@@ -381,7 +382,7 @@ const SignupPage = () => {
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                 Họ và tên <span className="text-red-500">*</span>
               </label>
-              <input id="fullName" name="fullName" type="text" required value={formData.fullName} onChange={handleInputChange} placeholder="Nhập họ và tên của bạn" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+              <input id="fullName" name="fullName" type="text" required value={formData.fullName} onChange={handleInputChange} placeholder="Nhập họ và tên của bạn" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
               {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
             </div>
 
@@ -390,7 +391,7 @@ const SignupPage = () => {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                 Địa chỉ email <span className="text-red-500">*</span>
               </label>
-              <input id="email" name="email" type="email" autoComplete="email" required value={formData.email} onChange={handleInputChange} placeholder="Nhập địa chỉ email của bạn" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+              <input id="email" name="email" type="email" autoComplete="email" required value={formData.email} onChange={handleInputChange} placeholder="Nhập địa chỉ email của bạn" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
               {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
             </div>
 
@@ -400,7 +401,7 @@ const SignupPage = () => {
                 Mật khẩu <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required value={formData.password} onChange={handleInputChange} placeholder="Tạo một mật khẩu mạnh" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors pr-12 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+                <input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required value={formData.password} onChange={handleInputChange} placeholder="Tạo một mật khẩu mạnh" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors pr-12" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <svg className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {showPassword ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.05 8.05m1.828 1.828l-.94.94M6.221 6.22l12.574 12.574" />}
@@ -418,7 +419,7 @@ const SignupPage = () => {
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                 Xác nhận mật khẩu <span className="text-red-500">*</span>
               </label>
-              <input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" required value={formData.confirmPassword} onChange={handleInputChange} placeholder="Nhập lại mật khẩu của bạn" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+              <input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" required value={formData.confirmPassword} onChange={handleInputChange} placeholder="Nhập lại mật khẩu của bạn" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
               {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
             </div>
 
@@ -427,7 +428,7 @@ const SignupPage = () => {
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                 Số điện thoại <span className="text-gray-400">(Không bắt buộc)</span>
               </label>
-              <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel-national" value={formData.phone} onChange={handleInputChange} placeholder="VD: 0901234567" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+              <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel-national" value={formData.phone} onChange={handleInputChange} placeholder="VD: 0901234567" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
             </div>
           </div>
 
@@ -442,7 +443,7 @@ const SignupPage = () => {
               <label htmlFor="currentLocation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                 Nơi ở hiện tại / Thành phố <span className="text-red-500">*</span>
               </label>
-              <input id="currentLocation" name="currentLocation" type="text" required value={formData.currentLocation} onChange={handleInputChange} placeholder="VD: Quận 1, TP. Hồ Chí Minh" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+              <input id="currentLocation" name="currentLocation" type="text" required value={formData.currentLocation} onChange={handleInputChange} placeholder="VD: Quận 1, TP. Hồ Chí Minh" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
               {errors.currentLocation && <p className="mt-1 text-sm text-red-600">{errors.currentLocation}</p>}
             </div>
 
@@ -477,7 +478,7 @@ const SignupPage = () => {
                       <label htmlFor={`qualification_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                       Bằng cấp <span className="text-red-500">*</span>
                     </label>
-                      <select id={`qualification_${education.id}`} name={`qualification_${education.id}`} required value={education.qualification} onChange={e => handleEducationChange(education.id, 'qualification', e.target.value)} className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-gray-300 dark:focus:border-gray-300">
+                      <select id={`qualification_${education.id}`} name={`qualification_${education.id}`} required value={education.qualification} onChange={e => handleEducationChange(education.id, 'qualification', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors">
                       <option value="">Chọn bằng cấp</option>
                       {qualificationOptions.map(option => <option key={option} value={option}>{option}</option>)}
                     </select>
@@ -489,7 +490,7 @@ const SignupPage = () => {
                     <label htmlFor={`fieldOfStudy_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                       Ngành học / Chuyên ngành <span className="text-red-500">*</span>
                     </label>
-                    <input id={`fieldOfStudy_${education.id}`} name={`fieldOfStudy_${education.id}`} type="text" required value={education.fieldOfStudy} onChange={e => handleEducationChange(education.id, 'fieldOfStudy', e.target.value)} placeholder="VD: Công nghệ thông tin, Kế toán, Marketing" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+                    <input id={`fieldOfStudy_${education.id}`} name={`fieldOfStudy_${education.id}`} type="text" required value={education.fieldOfStudy} onChange={e => handleEducationChange(education.id, 'fieldOfStudy', e.target.value)} placeholder="VD: Công nghệ thông tin, Kế toán, Marketing" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
                     {errors[`education_${education.id}_fieldOfStudy`] && <p className="mt-1 text-sm text-red-600">{errors[`education_${education.id}_fieldOfStudy`]}</p>}
                   </div>
 
@@ -498,7 +499,7 @@ const SignupPage = () => {
                     <label htmlFor={`universityName_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                       Tên trường đại học / cao đẳng <span className="text-red-500">*</span>
                     </label>
-                    <input id={`universityName_${education.id}`} name={`universityName_${education.id}`} type="text" required value={education.universityName} onChange={e => handleEducationChange(education.id, 'universityName', e.target.value)} placeholder="VD: Đại học Bách Khoa TP.HCM, Đại học Quốc gia Hà Nội" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+                    <input id={`universityName_${education.id}`} name={`universityName_${education.id}`} type="text" required value={education.universityName} onChange={e => handleEducationChange(education.id, 'universityName', e.target.value)} placeholder="VD: Đại học Bách Khoa TP.HCM, Đại học Quốc gia Hà Nội" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
                     {errors[`education_${education.id}_universityName`] && <p className="mt-1 text-sm text-red-600">{errors[`education_${education.id}_universityName`]}</p>}
                   </div>
 
@@ -509,7 +510,7 @@ const SignupPage = () => {
                       <label htmlFor={`graduationYear_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                         Năm tốt nghiệp <span className="text-red-500">*</span>
                       </label>
-                      <select id={`graduationYear_${education.id}`} name={`graduationYear_${education.id}`} required value={education.graduationYear} onChange={e => handleEducationChange(education.id, 'graduationYear', e.target.value)} className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-gray-300 dark:focus:border-gray-300">
+                      <select id={`graduationYear_${education.id}`} name={`graduationYear_${education.id}`} required value={education.graduationYear} onChange={e => handleEducationChange(education.id, 'graduationYear', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors">
                         <option value="">Chọn năm</option>
                         {graduationYears.map(year => <option key={year} value={year}>{year}</option>)}
                       </select>
@@ -521,7 +522,7 @@ const SignupPage = () => {
                       <label htmlFor={`cgpaPercentage_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-1">
                         GPA
                       </label>
-                      <input id={`cgpaPercentage_${education.id}`} name={`cgpaPercentage_${education.id}`} type="text" inputMode="decimal" value={education.cgpaPercentage} onChange={e => handleEducationChange(education.id, 'cgpaPercentage', e.target.value)} placeholder="Ví dụ: 3.6 / 4.0" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+                      <input id={`cgpaPercentage_${education.id}`} name={`cgpaPercentage_${education.id}`} type="text" inputMode="decimal" value={education.cgpaPercentage} onChange={e => handleEducationChange(education.id, 'cgpaPercentage', e.target.value)} placeholder="Ví dụ: 3.6 / 4.0" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
                       <p className="mt-1 text-xs text-gray-500 font-['Roboto']">Nhập GPA của bạn</p>
                       {errors[`education_${education.id}_cgpaPercentage`] && <p className="mt-1 text-sm text-red-600">{errors[`education_${education.id}_cgpaPercentage`]}</p>}
                     </div>
@@ -539,7 +540,7 @@ const SignupPage = () => {
               <label htmlFor="currentStatus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                 Trạng thái hiện tại <span className="text-red-500">*</span>
               </label>
-              <select id="currentStatus" name="currentStatus" required value={formData.currentStatus} onChange={handleInputChange} className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-gray-300 dark:focus:border-gray-300">
+              <select id="currentStatus" name="currentStatus" required value={formData.currentStatus} onChange={handleInputChange} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors">
                 <option value="">Chọn trạng thái</option>
                 {currentStatusOptions.map(option => <option key={option} value={option}>{option}</option>)}
               </select>
@@ -557,7 +558,7 @@ const SignupPage = () => {
                 required
                 value={formData.careerField}
                 onChange={handleInputChange}
-                className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-gray-300 dark:focus:border-gray-300"
+                className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors"
               >
                 <option value="">Chọn lĩnh vực</option>
                 {CAREER_FIELD_OPTIONS.map(option => (
@@ -590,7 +591,7 @@ const SignupPage = () => {
               
               {}
               <div className="flex gap-2">
-                <input type="text" placeholder="Nhập một kỹ năng và nhấn Enter" className="flex-1 px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" onKeyPress={e => {
+                <input type="text" placeholder="Nhập một kỹ năng và nhấn Enter" className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" onKeyPress={e => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   const skill = e.target.value.trim();
@@ -659,7 +660,7 @@ const SignupPage = () => {
                       <label htmlFor={`yearsOfExperience_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                         Số năm kinh nghiệm cho vị trí này
                       </label>
-                      <select id={`yearsOfExperience_${experience.id}`} value={experience.yearsOfExperience} onChange={e => handleWorkExperienceChange(experience.id, 'yearsOfExperience', e.target.value)} className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-gray-300 dark:focus:border-gray-300">
+                      <select id={`yearsOfExperience_${experience.id}`} value={experience.yearsOfExperience} onChange={e => handleWorkExperienceChange(experience.id, 'yearsOfExperience', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors">
                         <option value="">Chọn số năm kinh nghiệm</option>
                         {experienceOptions.map(option => <option key={option} value={option}>{option}</option>)}
                       </select>
@@ -670,7 +671,7 @@ const SignupPage = () => {
                       <label htmlFor={`company_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                         Tên công ty
                       </label>
-                      <input id={`company_${experience.id}`} type="text" value={experience.company} onChange={e => handleWorkExperienceChange(experience.id, 'company', e.target.value)} placeholder="VD: FPT, VNG, Viettel, MoMo" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+                      <input id={`company_${experience.id}`} type="text" value={experience.company} onChange={e => handleWorkExperienceChange(experience.id, 'company', e.target.value)} placeholder="VD: FPT, VNG, Viettel, MoMo" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
                     </div>
 
                     {}
@@ -678,7 +679,7 @@ const SignupPage = () => {
                       <label htmlFor={`position_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                         Vị trí / Vai trò
                       </label>
-                      <input id={`position_${experience.id}`} type="text" value={experience.position} onChange={e => handleWorkExperienceChange(experience.id, 'position', e.target.value)} placeholder="ví dụ: Kỹ sư phần mềm, Chuyên viên phân tích dữ liệu, Quản lý dự án" className="block w-full px-4 py-3 border border-gray-200 rounded-full placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+                      <input id={`position_${experience.id}`} type="text" value={experience.position} onChange={e => handleWorkExperienceChange(experience.id, 'position', e.target.value)} placeholder="ví dụ: Kỹ sư phần mềm, Chuyên viên phân tích dữ liệu, Quản lý dự án" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
                     </div>
 
                     {}
@@ -688,7 +689,7 @@ const SignupPage = () => {
                     <label htmlFor={`startDate_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                           Ngày bắt đầu
                         </label>
-                        <input id={`startDate_${experience.id}`} type="month" value={experience.startDate} onChange={e => handleWorkExperienceChange(experience.id, 'startDate', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 rounded-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+                        <input id={`startDate_${experience.id}`} type="month" value={experience.startDate} onChange={e => handleWorkExperienceChange(experience.id, 'startDate', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
                       </div>
 
                       {}
@@ -697,7 +698,7 @@ const SignupPage = () => {
                           Ngày kết thúc
                         </label>
                         <div className="space-y-2">
-                          <input id={`endDate_${experience.id}`} type="month" value={experience.endDate} onChange={e => handleWorkExperienceChange(experience.id, 'endDate', e.target.value)} disabled={experience.isCurrentlyWorking} className="block w-full px-4 py-3 border border-gray-200 rounded-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#EE0000] font-['Roboto'] transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:disabled:bg-gray-700 dark:focus:ring-red-900 dark:focus:border-[#EE0000]" />
+                          <input id={`endDate_${experience.id}`} type="month" value={experience.endDate} onChange={e => handleWorkExperienceChange(experience.id, 'endDate', e.target.value)} disabled={experience.isCurrentlyWorking} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors disabled:opacity-60 disabled:cursor-not-allowed" />
                           <label className="flex items-center text-sm text-gray-600 font-['Roboto']">
                             <input type="checkbox" checked={experience.isCurrentlyWorking} onChange={e => handleWorkExperienceChange(experience.id, 'isCurrentlyWorking', e.target.checked)} className="mr-2 rounded border-gray-300 text-black focus:ring-black dark:border-gray-600 dark:text-white dark:focus:ring-gray-300" />
                             Tôi hiện đang làm việc tại đây
@@ -711,7 +712,7 @@ const SignupPage = () => {
                       <label htmlFor={`description_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
                         Mô tả công việc / Trách nhiệm
                       </label>
-                      <textarea id={`description_${experience.id}`} rows="3" value={experience.description} onChange={e => handleWorkExperienceChange(experience.id, 'description', e.target.value)} placeholder="Mô tả ngắn gọn trách nhiệm chính và thành tựu của bạn..." className="block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black font-['Roboto'] transition-colors resize-vertical dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-100 dark:focus:ring-gray-300 dark:focus:border-gray-300" />
+                      <textarea id={`description_${experience.id}`} rows="3" value={experience.description} onChange={e => handleWorkExperienceChange(experience.id, 'description', e.target.value)} placeholder="Mô tả ngắn gọn trách nhiệm chính và thành tựu của bạn..." className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors resize-vertical" />
                     </div>
                     <p className="text-sm text-gray-500 font-['Roboto']">
                    Việc thêm chi tiết kinh nghiệm làm việc giúp nhà tuyển dụng hiểu rõ hơn về nền tảng của bạn và cải thiện khả năng phù hợp công việc. Bạn có thể thêm nhiều vai trò nếu đã làm ở nhiều công ty khác nhau.

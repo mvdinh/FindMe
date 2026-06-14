@@ -1,28 +1,42 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import AdminLayout from '../layout/AdminLayout';
-import AdminModal from '../components/AdminModal';
-import { ADMIN_PAGE, ADMIN_PAGE_HEADER, ADMIN_H1, ADMIN_SUBTITLE, HR_TABLE_WRAP } from '../adminLayoutClasses';
-import Pagination from '@/components/common/Pagination';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useApiRequest } from '../../hooks/useApiRequest';
-import { formatDateTimeVN } from '../adminDateFormat';
-import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import AdminLayout from "../layout/AdminLayout";
+import AdminModal from "../components/AdminModal";
+import {
+  ADMIN_PAGE,
+  ADMIN_PAGE_HEADER,
+  ADMIN_H1,
+  ADMIN_SUBTITLE,
+  HR_TABLE_WRAP,
+} from "../adminLayoutClasses";
+import Pagination from "@/components/common/Pagination";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useApiRequest } from "../../hooks/useApiRequest";
+import { formatDateTimeVN } from "@/utils/dateFormat";
+import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const statusVi = {
-  active: 'Đang hoạt động',
-  closed: 'Đã đóng',
-  inactive: 'Đã lưu trữ',
-  draft: 'Bản nháp'
+  active: "Đang hoạt động",
+  closed: "Đã đóng",
+  draft: "Chờ phê duyệt",
 };
 
 const JobStatusRequestsPage = () => {
+  const navigate = useNavigate();
   const { makeJsonRequest } = useApiRequest();
   const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,13 +46,13 @@ const JobStatusRequestsPage = () => {
     totalItems: 0,
     limit: 20,
     hasNextPage: false,
-    hasPrevPage: false
+    hasPrevPage: false,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionId, setActionId] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
-  const [rejectNote, setRejectNote] = useState('');
+  const [rejectNote, setRejectNote] = useState("");
 
   const pageLimit = pagination.limit || 20;
   const load = useCallback(async () => {
@@ -47,7 +61,7 @@ const JobStatusRequestsPage = () => {
       setError(null);
       const qs = new URLSearchParams({
         page: String(currentPage),
-        limit: '20'
+        limit: "20",
       }).toString();
       const res = await makeJsonRequest(`/api/admin/job-status-requests?${qs}`);
       if (res.success) {
@@ -61,14 +75,14 @@ const JobStatusRequestsPage = () => {
             totalItems: p.totalItems ?? rows.length,
             limit: p.limit ?? 20,
             hasNextPage: !!p.hasNextPage,
-            hasPrevPage: !!p.hasPrevPage
+            hasPrevPage: !!p.hasPrevPage,
           });
         }
       } else {
-        setError(res.message || 'Không tải được danh sách');
+        setError(res.message || "Không tải được danh sách");
       }
     } catch {
-      setError('Không tải được danh sách yêu cầu');
+      setError("Không tải được danh sách yêu cầu");
     } finally {
       setLoading(false);
     }
@@ -78,56 +92,62 @@ const JobStatusRequestsPage = () => {
     load();
   }, [load]);
 
-  const approve = async id => {
+  const approve = async (id) => {
     try {
       setActionId(id);
       setError(null);
-      const res = await makeJsonRequest(`/api/admin/job-status-requests/${id}/approve`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      });
+      const res = await makeJsonRequest(
+        `/api/admin/job-status-requests/${id}/approve`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        },
+      );
       if (res.success) {
         await load();
       } else {
-        setError(res.message || 'Duyệt thất bại');
+        setError(res.message || "Duyệt thất bại");
       }
     } catch (e) {
-      setError(e?.message || 'Duyệt thất bại');
+      setError(e?.message || "Duyệt thất bại");
     } finally {
       setActionId(null);
     }
   };
 
-  const openReject = row => {
+  const openReject = (row) => {
     setRejectModal(row);
-    setRejectNote('');
+    setRejectNote("");
   };
 
   const submitReject = async () => {
     if (!rejectModal?.id) return;
     const note = rejectNote.trim();
     if (note.length < 5) {
-      setError('Lý do từ chối cần tối thiểu 5 ký tự.');
+      setError("Lý do từ chối cần tối thiểu 5 ký tự.");
       return;
     }
     try {
       setActionId(rejectModal.id);
       setError(null);
-      const res = await makeJsonRequest(`/api/admin/job-status-requests/${rejectModal.id}/reject`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewNote: note })
-      });
+      const res = await makeJsonRequest(
+        `/api/admin/job-status-requests/${rejectModal.id}/reject`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reviewNote: note }),
+        },
+      );
       if (res.success) {
         setRejectModal(null);
-        setRejectNote('');
+        setRejectNote("");
         await load();
       } else {
-        setError(res.message || 'Từ chối thất bại');
+        setError(res.message || "Từ chối thất bại");
       }
     } catch (e) {
-      setError(e?.message || 'Từ chối thất bại');
+      setError(e?.message || "Từ chối thất bại");
     } finally {
       setActionId(null);
     }
@@ -138,9 +158,9 @@ const JobStatusRequestsPage = () => {
       <div className={ADMIN_PAGE}>
         <div className={ADMIN_PAGE_HEADER}>
           <div className="min-w-0 flex-1">
-            <h1 className={ADMIN_H1}>Yêu cầu đổi trạng thái từ HR</h1>
+            <h1 className={ADMIN_H1}>Kiểm duyệt tin tuyển dụng</h1>
             <p className={ADMIN_SUBTITLE}>
-              Duyệt hoặc từ chối đề xuất thay đổi trạng thái tin tuyển dụng sau khi admin đã thao tác trước đó.
+              Kiểm duyệt tin tuyển dụng của các doanh nghiệp
             </p>
           </div>
         </div>
@@ -151,7 +171,12 @@ const JobStatusRequestsPage = () => {
             <AlertTitle>Lỗi</AlertTitle>
             <AlertDescription className="flex flex-wrap items-center gap-2">
               {error}
-              <Button type="button" variant="link" className="h-auto p-0 text-destructive" onClick={() => setError(null)}>
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-destructive"
+                onClick={() => setError(null)}
+              >
                 Đóng
               </Button>
             </AlertDescription>
@@ -179,52 +204,49 @@ const JobStatusRequestsPage = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12 text-center font-['Roboto']">STT</TableHead>
-                      <TableHead className="font-['Roboto']">HR</TableHead>
-                      <TableHead className="font-['Roboto']">Tin</TableHead>
-                      <TableHead className="font-['Roboto']">Hiện tại → Đề xuất</TableHead>
-                      <TableHead className="font-['Roboto']">Nội dung</TableHead>
-                      <TableHead className="text-right font-['Roboto']">Thao tác</TableHead>
+                      <TableHead className="w-12 text-center font-['Roboto']">
+                        STT
+                      </TableHead>
+                      <TableHead className="font-['Roboto']">
+                        Nhà tuyển dụng
+                      </TableHead>
+                      <TableHead className="font-['Roboto']">
+                        Tin tuyển dụng
+                      </TableHead>
+                      <TableHead className="font-['Roboto']">
+                        Ngày tạo yêu cầu
+                      </TableHead>
+                      <TableHead className="text-right font-['Roboto']">
+                        Thao tác
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {items.map((row, index) => (
-                      <TableRow key={row.id}>
+                      <TableRow
+                        key={row.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors group"
+                        title="Xem chi tiết việc làm"
+                        onClick={() => navigate(`/admin/jobs/${row.jobId}`)}
+                      >
                         <TableCell className="text-center font-['Roboto'] text-sm tabular-nums text-muted-foreground">
                           {index + 1}
                         </TableCell>
                         <TableCell className="font-['Roboto']">
-                          <div className="font-medium">{row.requestedByName || '—'}</div>
-                          <div className="text-xs text-muted-foreground">{row.requestedByEmail}</div>
+                          <div className="font-medium">
+                            {row.companyName || row.requestedByName || "—"}
+                          </div>
                         </TableCell>
                         <TableCell className="max-w-[200px] font-['Roboto']">
-                          <div className="truncate font-medium" title={row.jobTitle}>
+                          <div className="truncate font-medium">
                             {row.jobTitle}
                           </div>
-                          <div className="text-xs text-muted-foreground">{row.department}</div>
                         </TableCell>
                         <TableCell className="font-['Roboto']">
-                          <span className="text-muted-foreground">{statusVi[row.jobStatus] || row.jobStatus}</span>
-                          <span className="mx-1 text-muted-foreground/60">→</span>
-                          <span
-                            className={cn(
-                              "font-medium",
-                              row.requestedStatus === 'active'
-                                ? 'text-emerald-600 dark:text-emerald-400'
-                                : row.requestedStatus === 'inactive' || row.requestedStatus === 'closed'
-                                  ? 'text-destructive'
-                                  : 'text-primary'
-                            )}
-                          >
-                            {statusVi[row.requestedStatus] || row.requestedStatus}
-                          </span>
-                        </TableCell>
-                        <TableCell className="max-w-md font-['Roboto']">
-                          <p className="line-clamp-4 whitespace-pre-wrap" title={row.message}>
-                            {row.message}
-                          </p>
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {row.createdAt ? formatDateTimeVN(row.createdAt) : ''}
+                          <div className="text-sm">
+                            {row.createdAt
+                              ? formatDateTimeVN(row.createdAt)
+                              : ""}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
@@ -233,16 +255,22 @@ const JobStatusRequestsPage = () => {
                             size="sm"
                             className="mr-2 bg-emerald-600 text-white hover:bg-emerald-700"
                             disabled={actionId === row.id}
-                            onClick={() => approve(row.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              approve(row.id);
+                            }}
                           >
-                            {actionId === row.id ? '...' : 'Duyệt'}
+                            {actionId === row.id ? "..." : "Duyệt"}
                           </Button>
                           <Button
                             type="button"
                             size="sm"
                             variant="secondary"
                             disabled={actionId === row.id}
-                            onClick={() => openReject(row)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openReject(row);
+                            }}
                           >
                             Từ chối
                           </Button>
@@ -275,11 +303,20 @@ const JobStatusRequestsPage = () => {
         closeOnBackdrop={!actionId}
         footer={
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" disabled={!!actionId} onClick={() => setRejectModal(null)}>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!!actionId}
+              onClick={() => setRejectModal(null)}
+            >
               Hủy
             </Button>
-            <Button type="button" disabled={!!actionId || rejectNote.trim().length < 5} onClick={submitReject}>
-              {actionId ? 'Đang gửi...' : 'Xác nhận từ chối'}
+            <Button
+              type="button"
+              disabled={!!actionId || rejectNote.trim().length < 5}
+              onClick={submitReject}
+            >
+              {actionId ? "Đang gửi..." : "Xác nhận từ chối"}
             </Button>
           </div>
         }
@@ -291,7 +328,7 @@ const JobStatusRequestsPage = () => {
           <Textarea
             id="reject-note"
             value={rejectNote}
-            onChange={e => setRejectNote(e.target.value)}
+            onChange={(e) => setRejectNote(e.target.value)}
             rows={4}
             placeholder="Tối thiểu 5 ký tự"
             className="font-['Roboto']"

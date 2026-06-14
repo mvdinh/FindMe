@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bell, Trash2 } from 'lucide-react';
-import { formatDateVN } from '../adminDateFormat';
+import { formatDateVN } from "@/utils/dateFormat";
 import { useNotifications } from '../../contexts/NotificationsContext';
 import { useAuth } from '../../contexts/AuthContext';
 import ConfirmDialog from '@/components/common/ConfirmDialog';

@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useApiRequest } from '../../hooks/useApiRequest';
 import ApplicantLayout from '../layout/ApplicantLayout';
 import { HR_PAGE, HR_PAGE_HEADER, HR_H1, HR_SUBTITLE } from '../applicantLayoutClasses';
-import { formatDateVN } from '../applicantDateFormat';
+import { formatDateVN } from "@/utils/dateFormat";
 import { cn } from '@/lib/utils';
 import { HR_INPUT, HR_INPUT_PILL, HR_TEXTAREA_PILL } from '../applicantFormClasses';
 import { SkeletonProfile } from '../../components/common/Skeleton';

@@ -6,4 +6,4 @@ export {
   HR_TEXTAREA_PILL,
   HR_INPUT_ROUNDED_L,
   HR_FILTER_CONTROL
-} from '../hr/hrFormClasses';
+} from '../recruiter/recruiterFormClasses';

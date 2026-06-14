@@ -34,11 +34,14 @@ const defaultUsers = [
   {
     firstName: "Ngọc Anh",
     lastName: "Phạm",
-    email: "hr@findme.com",
+    email: "recruiter@findme.com",
     password: "pwd",
-    role: "hr",
+    role: "recruiter",
     accountStatus: "active",
     emailVerifiedAt: new Date(),
+    companyName: "FINDME Corporation",
+    companyAddress: "Keangnam Landmark 72, Hà Nội",
+    jobTitle: "Trưởng phòng Tuyển dụng",
   },
 ];
 
@@ -74,9 +77,9 @@ async function seedUsers() {
     const firstName = args.firstName || "Test";
     const lastName = args.lastName || "User";
 
-    if (!["applicant", "hr", "admin"].includes(role)) {
+    if (!["applicant", "recruiter", "admin"].includes(role)) {
       console.error(
-        `Error: Invalid role "${role}". Allowed roles: applicant, hr, admin`,
+        `Error: Invalid role "${role}". Allowed roles: applicant, recruiter, admin`,
       );
       return;
     }
@@ -124,6 +127,9 @@ async function seedUsers() {
         existing.password = hashedPassword;
         existing.accountStatus = "active";
         existing.emailVerifiedAt = existing.emailVerifiedAt || new Date();
+        if (u.companyName) existing.companyName = u.companyName;
+        if (u.companyAddress) existing.companyAddress = u.companyAddress;
+        if (u.jobTitle) existing.jobTitle = u.jobTitle;
         await existing.save();
         console.log(
           `Updated existing default user: ${u.email} (Password: ${u.password}, Role: ${u.role})`,
@@ -137,6 +143,9 @@ async function seedUsers() {
           role: u.role,
           accountStatus: "active",
           emailVerifiedAt: new Date(),
+          companyName: u.companyName,
+          companyAddress: u.companyAddress,
+          jobTitle: u.jobTitle,
         });
         console.log(
           `Seeded default user: ${u.email} (Password: ${u.password}, Role: ${u.role})`,

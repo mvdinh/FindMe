@@ -1,4 +1,8 @@
 const nodemailer = require('nodemailer');
+/**
+ * Hàm phụ trợ: Khởi tạo transporter (cấu hình máy chủ gửi email) cho Nodemailer.
+ * Dùng thông tin từ các biến môi trường (host, port, user, pass).
+ */
 function createTransporter() {
   const config = {
     auth: {
@@ -33,6 +37,10 @@ const transporter = createTransporter();
   }
 })();
 
+/**
+ * Hàm phụ trợ: Tạo HTML Template cho các email gửi mã OTP (Đăng ký, Quên mật khẩu).
+ * Template có giao diện đẹp, logo/tên ứng dụng và màu sắc chuẩn.
+ */
 function buildBrandedOtpEmailHtml({
   appName,
   title,
@@ -114,6 +122,10 @@ function buildBrandedOtpEmailHtml({
 </html>
   `;
 }
+/**
+ * Service: Hàm chung để gửi email thông qua transporter đã tạo.
+ * Bao gồm cơ chế bắt lỗi và hiển thị URL xem trước (preview) nếu dùng Ethereal mail.
+ */
 async function sendEmail({
   to,
   subject,
@@ -155,6 +167,9 @@ async function sendEmail({
     }
   }
 }
+/**
+ * Service: Gửi email chứa mã OTP xác thực Đăng ký tài khoản.
+ */
 async function sendOtpEmail(to, code) {
   const appName = 'FINDME';
   const expiryMins = Math.floor(parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10));
@@ -180,6 +195,9 @@ async function sendOtpEmail(to, code) {
   });
 }
 
+/**
+ * Service: Gửi email chứa mã OTP Đặt lại mật khẩu.
+ */
 async function sendPasswordResetEmail(to, code) {
   const appName = 'FINDME';
   const expiryMins = Math.floor(parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10));
@@ -205,6 +223,10 @@ async function sendPasswordResetEmail(to, code) {
   });
 }
 
+/**
+ * Hàm phụ trợ: Tạo HTML Template cho email thông báo kết quả phỏng vấn (Trúng tuyển / Từ chối).
+ * Có hỗ trợ màu sắc khác nhau (xanh lá / đỏ) dựa theo trạng thái (isSuccess).
+ */
 function buildBrandedOutcomeEmailHtml({
   appName,
   title,
@@ -280,6 +302,9 @@ function buildBrandedOutcomeEmailHtml({
   `;
 }
 
+/**
+ * Service: Gửi thư chúc mừng trúng tuyển (Job Offer) cho ứng viên.
+ */
 async function sendJobOfferEmail({ to, candidateName, jobTitle, notes }) {
   const appName = 'FINDME';
   const subject = `[${appName}] Thư chúc mừng nhận việc - Vị trí ${jobTitle}`;
@@ -301,6 +326,9 @@ async function sendJobOfferEmail({ to, candidateName, jobTitle, notes }) {
   return sendEmail({ to, subject, text, html });
 }
 
+/**
+ * Service: Gửi thư từ chối (Rejection) hoặc chưa phù hợp cho ứng viên.
+ */
 async function sendRejectionEmail({ to, candidateName, jobTitle, notes }) {
   const appName = 'FINDME';
   const subject = `[${appName}] Kết quả tuyển dụng vị trí ${jobTitle}`;

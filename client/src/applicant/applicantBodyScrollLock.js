@@ -1,2 +1,2 @@
 /** Re-export — cùng `hr/hrBodyScrollLock.js` (khóa scroll khi drawer/modal). */
-export { lockHrBodyScroll, unlockHrBodyScroll } from '../hr/hrBodyScrollLock';
+export { lockRecruiterBodyScroll as lockHrBodyScroll, unlockRecruiterBodyScroll as unlockHrBodyScroll } from '../recruiter/recruiterBodyScrollLock';

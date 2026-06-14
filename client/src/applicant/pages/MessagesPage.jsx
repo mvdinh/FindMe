@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { formatDateVN } from '../applicantDateFormat';
+import { formatDateVN } from "@/utils/dateFormat";
 import { Bell, Briefcase, Calendar, FileText, Trash2 } from 'lucide-react';
 
 const NotificationsPage = () => {

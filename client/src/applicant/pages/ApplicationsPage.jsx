@@ -4,7 +4,7 @@ import ApplicantLayout from '../layout/ApplicantLayout';
 import { HR_PAGE, HR_PAGE_HEADER, HR_H1, HR_SUBTITLE, HR_TABLE_WRAP } from '../applicantLayoutClasses';
 import { HR_INPUT } from '../applicantFormClasses';
 import { SkeletonTable } from '../../components/common/Skeleton';
-import { formatDateVN } from '../applicantDateFormat';
+import { formatDateVN } from "@/utils/dateFormat";
 import { hrStatusBadgeClass } from '../applicantTheme';
 import { useAuth } from '../../contexts/AuthContext';
 import { getRecruitmentCode } from '../../utils/recruitmentCode';
@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ClipboardList, Download, MessageSquareText } from 'lucide-react';
+import { ClipboardList, Download, MessageSquareText, Eye } from 'lucide-react';
 
 import { useToast } from '../../contexts/ToastContext';
 
@@ -99,8 +99,8 @@ const ApplicationsPage = () => {
     const status = application.status;
     const texts = {
       submitted: 'Đang chờ nhà tuyển dụng phản hồi',
-      under_review: 'Đơn đang được xem xét',
-      shortlisted: 'Đơn đang được xem xét',
+      under_review: 'Đơn đang chờ xét duyệt',
+      shortlisted: 'Đơn đang chờ xét duyệt',
       interview_scheduled: 'Được mời phỏng vấn',
       interview_confirmed: 'Đã xác nhận lịch phỏng vấn',
       offer_extended: 'Đã nhận đề nghị công việc',
@@ -143,7 +143,7 @@ const ApplicationsPage = () => {
   const statusFilterLabel = raw => {
     const labels = {
       submitted: 'Đã nộp',
-      under_review: 'Đang xem xét',
+      under_review: 'Chờ xét duyệt',
       interview_scheduled: 'Được mời phỏng vấn',
       interview_confirmed: 'Đã xác nhận lịch PV',
       interview_passed: 'Đạt phỏng vấn',
@@ -190,7 +190,7 @@ const ApplicationsPage = () => {
             >
               <option value="">Tất cả đơn ứng tuyển</option>
               <option value="submitted">Đã nộp</option>
-              <option value="under_review">Đang xem xét</option>
+              <option value="under_review">Chờ xét duyệt</option>
               <option value="interview_scheduled">Được mời phỏng vấn</option>
               <option value="interview_confirmed">Đã xác nhận lịch PV</option>
               <option value="interview_passed">Đã phỏng vấn xong</option>
@@ -229,7 +229,7 @@ const ApplicationsPage = () => {
                         <TableHead className="font-['Roboto'] text-xs">Địa điểm</TableHead>
                         <TableHead className="font-['Roboto'] text-xs">Ngày nộp</TableHead>
                         <TableHead className="font-['Roboto'] text-xs">Trạng thái</TableHead>
-                        <TableHead className="text-right font-['Roboto'] text-xs">Thao tác</TableHead>
+                        <TableHead className="text-left font-['Roboto'] text-xs">Thao tác</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -268,8 +268,16 @@ const ApplicationsPage = () => {
                                 {getStatusText(application)}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex flex-wrap items-center justify-end gap-2">
+                            <TableCell className="text-left">
+                              <div className="flex flex-nowrap items-center justify-start gap-2">
+                                {application.job?._id && (
+                                  <Button variant="outline" size="sm" className="gap-1.5 font-['Roboto'] whitespace-nowrap" asChild>
+                                    <Link to={`/jobs/${application.job._id}`} title="Xem chi tiết việc làm">
+                                      <Eye className="size-3.5 shrink-0" aria-hidden />
+                                      Xem việc làm
+                                    </Link>
+                                  </Button>
+                                )}
                                 <Button
                                   type="button"
                                   variant="outline"

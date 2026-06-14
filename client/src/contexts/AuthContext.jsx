@@ -3,7 +3,7 @@ import { buildApiUrl } from '../utils/api';
 import { clearAllAppDataCaches } from '../utils/cacheManager';
 const profileUrlForRole = role => {
   if (role === 'applicant') return '/api/applicant/profile';
-  if (role === 'hr') return '/api/hr/profile';
+  if (role === 'recruiter') return '/api/recruiter/profile';
   return null;
 };
 const readStoredUserRole = () => {
@@ -114,7 +114,7 @@ export const AuthProvider = ({
           };
           setUser(processedUserData);
           persistUserToStorage(processedUserData);
-        } else if (role === 'hr') {
+        } else if (role === 'recruiter') {
           const {
             success: _s,
             ...profile
@@ -222,7 +222,7 @@ export const AuthProvider = ({
               resumeAvailable: data.data.resumeAvailable,
               skills: data.data.profile?.primarySkills || data.data.skills
             };
-          } else if (role === 'hr') {
+          } else if (role === 'recruiter') {
             const {
               success: _s,
               ...profile

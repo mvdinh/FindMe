@@ -13,7 +13,7 @@ const jobStatusChangeRequestSchema = new mongoose.Schema({
   },
   requestedStatus: {
     type: String,
-    enum: ['active', 'closed', 'inactive', 'draft'],
+    enum: ['active', 'closed', 'draft'],
     required: true
   },
   previousStatus: {

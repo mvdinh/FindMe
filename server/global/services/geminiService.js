@@ -9,6 +9,10 @@ class GeminiService {
     this.ai = null;
     this.modelId = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   }
+  /**
+   * Service: Gửi yêu cầu phân tích CV ứng viên so với mô tả công việc (Job Description)
+   * tới AI Gemini. Trả về kết quả JSON gồm điểm số phù hợp, điểm mạnh, điểm yếu, và thông tin trích xuất (kỹ năng, học vấn...).
+   */
   async analyzeResumeForJob({
     resumeText,
     resumeFile,
@@ -99,6 +103,11 @@ Now respond ONLY with JSON, no prose, matching EXACT schema:
       return this.createFallbackResumeAnalysis();
     }
   }
+  /**
+   * Service: Phân tích nhận xét phỏng vấn (Interview Feedback) của nhà tuyển dụng
+   * để tạo ra một bản tổng hợp khách quan, không thiên vị (non-discriminatory) bằng tiếng Việt.
+   * Cảnh báo nếu phát hiện ngôn từ mang tính định kiến (flags).
+   */
   async analyzeInterviewFeedback({
     feedbackText,
     candidateName,
@@ -160,6 +169,10 @@ Respond ONLY with JSON, no prose, matching EXACT schema:
       return this.createFallbackInterviewFeedback();
     }
   }
+  /**
+   * Hàm phụ trợ: Trích xuất và phân tích chuỗi JSON trả về từ AI một cách an toàn.
+   * Xóa bỏ các ký tự Markdown thừa (như ```json) nếu có.
+   */
   safeParseJson(text) {
     if (!text || typeof text !== 'string') return null;
     try {
@@ -173,6 +186,10 @@ Respond ONLY with JSON, no prose, matching EXACT schema:
       return null;
     }
   }
+  /**
+   * Hàm phụ trợ: Xử lý và phân tích kết quả trả về từ hàm analyzeInterviewFeedback.
+   * Trả về kết quả phân tích hoặc dữ liệu dự phòng (fallback) nếu lỗi.
+   */
   parseInterviewFeedbackResponse(text) {
     try {
       const parsed = this.safeParseJson(text);
@@ -183,6 +200,9 @@ Respond ONLY with JSON, no prose, matching EXACT schema:
       return this.createFallbackInterviewFeedback();
     }
   }
+  /**
+   * Hàm phụ trợ: Tạo kết quả đánh giá phỏng vấn dự phòng khi API Gemini bị lỗi hoặc không khả dụng.
+   */
   createFallbackInterviewFeedback() {
     return {
       sentiment: 'neutral',
@@ -199,6 +219,9 @@ Respond ONLY with JSON, no prose, matching EXACT schema:
       }
     };
   }
+  /**
+   * Hàm phụ trợ: Tạo kết quả phân tích CV dự phòng khi API Gemini bị lỗi hoặc không khả dụng.
+   */
   createFallbackResumeAnalysis() {
     return {
       overallScore: 50,
@@ -217,6 +240,9 @@ Respond ONLY with JSON, no prose, matching EXACT schema:
       }
     };
   }
+  /**
+   * Hàm phụ trợ: Trả về kết quả mặc định khi không có nhận xét phỏng vấn (feedback text rỗng).
+   */
   createNoFeedbackResult(applicationId) {
     return {
       sentiment: 'neutral',
@@ -236,6 +262,10 @@ Respond ONLY with JSON, no prose, matching EXACT schema:
       }
     };
   }
+  /**
+   * Hàm phụ trợ: Khởi tạo và trả về đối tượng Client của Google Gen AI (Gemini).
+   * Sử dụng Dynamic Import vì thư viện '@google/genai' là module ES.
+   */
   async getClient() {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('Gemini API not configured');

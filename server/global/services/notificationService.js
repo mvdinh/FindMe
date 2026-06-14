@@ -4,6 +4,10 @@ const {
   getIO
 } = require('../socket');
 
+/**
+ * Service: Tạo mới một thông báo trong cơ sở dữ liệu và phát (emit) sự kiện
+ * qua Socket.IO tới các client đang kết nối (để hiển thị thông báo realtime).
+ */
 async function createAndEmit({
   toUserId,
   toRole,
@@ -56,6 +60,10 @@ async function createAndEmit({
   return notif;
 }
 
+/**
+ * Service: Gửi thông báo hàng loạt (Broadcast) tới toàn bộ người dùng
+ * thuộc một nhóm quyền (role) cụ thể (ví dụ: gửi cho tất cả Admin).
+ */
 async function broadcastToRole(role, payload) {
   const users = await User.find({
     role

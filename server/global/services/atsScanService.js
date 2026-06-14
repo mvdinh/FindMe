@@ -1,5 +1,9 @@
 const scanChamdiemCvClient = require('./scanChamdiemCvClient');
 
+/**
+ * Hàm phụ trợ: Gộp các trường thông tin của tin tuyển dụng (Tiêu đề, Mô tả, Kỹ năng) 
+ * thành một khối văn bản (text) duy nhất để gửi cho AI scan.
+ */
 function buildJobTextForScan(job) {
   if (!job) return '';
   const skillLine = [...(job.requiredSkills || []), ...(job.preferredSkills || [])].filter(Boolean).join(', ');
@@ -7,10 +11,18 @@ function buildJobTextForScan(job) {
   return parts.join('\n\n').slice(0, 15000);
 }
 
+/**
+ * Service: Gửi đoạn văn bản CV và văn bản Job sang microservice AI (scanChamdiemCvClient)
+ * để tính toán điểm số phù hợp (matching score).
+ */
 async function matchCvToJob(cvText, jobText, baseUrlOverride) {
   return scanChamdiemCvClient.analyzeMatch(cvText, jobText, baseUrlOverride);
 }
 
+/**
+ * Hàm phụ trợ: Chuẩn hóa chuỗi văn bản (đưa về chữ thường, xóa khoảng trắng thừa) 
+ * để so khớp từ khóa kỹ năng dễ dàng hơn.
+ */
 function normalizeToken(s) {
   return String(s || '')
     .toLowerCase()
@@ -18,6 +30,10 @@ function normalizeToken(s) {
     .replace(/\s+/g, ' ');
 }
 
+/**
+ * Hàm phụ trợ: Kiểm tra xem một từ khóa kỹ năng (skill) có xuất hiện trong nội dung CV hay không.
+ * Nếu kỹ năng ngắn (như C, Go), dùng Regex để khớp chính xác biên của từ.
+ */
 function containsSkill(cvTextLower, skill) {
   const t = normalizeToken(skill);
   if (!t) return false;
@@ -30,6 +46,11 @@ function containsSkill(cvTextLower, skill) {
   return cvTextLower.includes(t);
 }
 
+/**
+ * Hàm phụ trợ: Trích xuất tín hiệu kỹ năng. 
+ * Tìm xem trong CV có bao nhiêu kỹ năng bắt buộc (required) và ưu tiên (preferred) của Job.
+ * Phân tách thành các mảng: đã tìm thấy (found) và còn thiếu (missing).
+ */
 function extractSkillSignals({ job, cvText }) {
   const required = Array.isArray(job?.requiredSkills) ? job.requiredSkills : [];
   const preferred = Array.isArray(job?.preferredSkills) ? job.preferredSkills : [];
@@ -51,6 +72,11 @@ function extractSkillSignals({ job, cvText }) {
   };
 }
 
+/**
+ * Dịch vụ cốt lõi: Xây dựng bản nhận xét chi tiết (Narrative) bằng ngôn ngữ tự nhiên (Tiếng Việt)
+ * từ kết quả điểm số thô do AI trả về. Đưa ra Điểm mạnh (strengths), Điểm yếu (concerns)
+ * và Các câu hỏi gợi ý để HR dùng khi phỏng vấn ứng viên.
+ */
 function buildDetailedScanNarrative(scan, context = {}) {
   const final = typeof scan.final_score === 'number' ? scan.final_score : 50;
   const embN = typeof scan.embedding_score === 'number' ? scan.embedding_score : final;
@@ -191,6 +217,10 @@ function buildDetailedScanNarrative(scan, context = {}) {
   return { strengths, concerns, questions };
 }
 
+/**
+ * Hàm phụ trợ: Chuyển đổi kết quả thô từ AI Scan thành cấu trúc đối tượng (object)
+ * chuẩn hóa mà MongoDB (Application Document) lưu trữ (gồm điểm số, mảng skills, strengths, concerns).
+ */
 function mapScanResultToAiFields(scan, context = {}) {
   const final = typeof scan.final_score === 'number' ? scan.final_score : 50;
   const embN = typeof scan.embedding_score === 'number' ? scan.embedding_score : final;

@@ -8,6 +8,7 @@
     "dev": "nodemon --max-http-header-size=32768 server.js",
     "seed:admin": "node scripts/seed-admin.js",
     "seed:users": "node scripts/seed-users.js",
+    "seed:demo": "node scripts/seedDemoData.js",
     "reset:db": "node scripts/reset-db.js",
     "migrate:education-vn": "node scripts/migrate-education-vn.js",
     "migrate:jobs-vn": "node scripts/migrate-jobs-vn.js",

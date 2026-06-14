@@ -1,27 +1,23 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationsContext';
+import { Bell, MessageSquare, ChevronDown, User } from 'lucide-react';
 const findmeLogo = '/logo.png';
 import ThemeToggle from '../../components/common/ThemeToggle';
+import NotificationDropdown from '../../components/notifications/NotificationDropdown';
+
 const HOME_SECTION_TRANG_CHU = 'trang-chu';
 const HOME_SECTION_NOI_LAM_VIEC = 'noi-lam-viec-ban-dang-tim-kiem';
 const HOME_SECTION_DAI_NGO = 'bien-giac-mo-thanh-hien-thuc';
 const HOME_SECTION_SU_KIEN = 'su-kien';
 const HEADER_SCROLL_OFFSET = 96;
 const getHomeNavActiveKey = () => {
-  const line = window.scrollY + HEADER_SCROLL_OFFSET;
-  const heroEl = document.getElementById(HOME_SECTION_TRANG_CHU);
-  const daiEl = document.getElementById(HOME_SECTION_DAI_NGO);
-  const suEl = document.getElementById(HOME_SECTION_SU_KIEN);
-  if (!heroEl) return 'home';
-  const heroEnd = heroEl.offsetTop + heroEl.offsetHeight;
-  if (line < heroEnd) return 'home';
-  const daiTop = daiEl?.offsetTop ?? Infinity;
-  const suTop = suEl?.offsetTop ?? Infinity;
-  if (line >= suTop) return 'su-kien';
-  if (line >= daiTop) return 'dai-ngo';
   return null;
 };
 const Navbar = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navActive, setNavActive] = useState(() => (typeof window !== 'undefined' && window.location.pathname.startsWith('/jobs') ? 'jobs' : null));
   const location = useLocation();
@@ -78,46 +74,110 @@ const Navbar = () => {
       });
     }
   };
-  return <header className="fixed inset-x-0 top-0 z-50 border-0 bg-transparent backdrop-blur-xl transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-6">
+  return <header className="fixed inset-x-0 top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-colors duration-300">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 grid grid-cols-2 md:grid-cols-[auto_1fr_auto] items-center gap-4">
           {}
           <div className="flex items-center">
-            <Link to={`/#${HOME_SECTION_NOI_LAM_VIEC}`} onClick={scrollToNoiLamViec} className="flex items-center gap-2">
-              <img src={findmeLogo} alt="findme" className="w-8 h-8" />
-              <span className="text-xl font-bold text-red-600 dark:text-red-400 font-['Open_Sans'] transition-colors duration-300">FINDME</span>
+            <Link to="/jobs" onClick={scrollToNoiLamViec} className="flex items-center gap-2">
+              <span className="text-2xl font-black text-red-600 dark:text-red-400 font-['Open_Sans'] transition-colors duration-300">FINDME</span>
             </Link>
           </div>
 
           {}
-          <nav className="hidden md:flex justify-center">
+          <nav className="hidden md:flex justify-start flex-1 ml-8">
             <div className="flex items-center gap-6 text-sm font-semibold font-['Open_Sans']">
-              <Link to={`/#${HOME_SECTION_TRANG_CHU}`} onClick={scrollToTrangChu} className={navDesktopClass('home')} aria-current={navActive === 'home' ? 'page' : undefined}>
-                Trang chủ
-              </Link>
-              <Link to={`/#${HOME_SECTION_NOI_LAM_VIEC}`} onClick={scrollToNoiLamViec} className={navDesktopClass(null)}>
-                Về FINDME
-              </Link>
               <Link to="/jobs" className={navDesktopClass('jobs')} aria-current={navActive === 'jobs' ? 'page' : undefined}>
-                Tuyển dụng
+                Việc làm
               </Link>
-              <Link to={`/#${HOME_SECTION_DAI_NGO}`} onClick={scrollToDaiNgo} className={navDesktopClass('dai-ngo')} aria-current={navActive === 'dai-ngo' ? 'page' : undefined}>
-                Đãi ngộ
+              <Link to="/companies" className={navDesktopClass('companies')}>
+                Công ty
               </Link>
-              <Link to={`/#${HOME_SECTION_SU_KIEN}`} onClick={scrollToSuKien} className={navDesktopClass('su-kien')} aria-current={navActive === 'su-kien' ? 'page' : undefined}>
-                Sự kiện
+              <Link to="/applicant/applications" className={navDesktopClass('applications')}>
+                Đơn ứng tuyển
               </Link>
-              <span className="opacity-90 text-gray-800 dark:text-gray-200">Liên hệ</span>
+              <Link to="/saved-jobs" className={navDesktopClass('saved-jobs')}>
+                Việc làm đã lưu
+              </Link>
             </div>
           </nav>
 
           {}
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-4">
+            {/* Recruiter Link */}
+            <div className="hidden lg:flex flex-col items-end leading-tight mr-1">
+              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Bạn là nhà tuyển dụng?</span>
+              <Link to="/tuyen-dung" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-0.5">
+                Đăng tuyển ngay <span className="font-normal">&raquo;</span>
+              </Link>
+            </div>
+
+            {/* Separator */}
+            <div className="hidden lg:block h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
+
             <div className="hidden md:flex items-center gap-3">
               <ThemeToggle className="shrink-0" />
-              <Link to="/login" className="px-5 py-2 rounded-full border border-red-600 bg-red-600 text-xs font-bold tracking-wide text-white hover:bg-red-700 hover:border-red-700 transition-colors font-['Open_Sans']">
-                ĐĂNG NHẬP
-              </Link>
+              {user ? (
+                <div className="flex items-center gap-3">
+                  {/* Notifications Bell with Dropdown */}
+                  <NotificationDropdown />
+
+                  {/* Messages Chat Icon */}
+                  <Link to="/messages" className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <MessageSquare className="w-5 h-5" />
+                  </Link>
+
+                  {/* Avatar with Dropdown */}
+                  <div className="relative group">
+                    <button className="flex items-center gap-1 focus:outline-none py-1">
+                      <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 ring-1 ring-border flex items-center justify-center">
+                        {user.profilePicture || user.avatar ? (
+                          <img src={user.profilePicture || user.avatar} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : (
+                          <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                        )}
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <div className="absolute right-0 mt-1.5 w-48 rounded-lg bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 py-1 hidden group-hover:block transition-all z-50">
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                          {user.lastName ? `${user.lastName} ${user.firstName}` : 'Người dùng'}
+                        </p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                      <Link to="/profile" className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        Thông tin cá nhân
+                      </Link>
+                      <Link to="/resumes" className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        CV của tôi
+                      </Link>
+                      <Link to="/applicant/applications" className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        Hồ sơ ứng tuyển
+                      </Link>
+                      <Link to="/change-password" className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        Đổi mật khẩu
+                      </Link>
+                      <button onClick={() => { logout(); navigate('/login'); }} className="w-full text-left block px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link to="/login" state={{ from: location }} className="px-5 py-2 rounded-full border border-red-600 text-red-600 bg-transparent text-xs font-bold tracking-wide hover:bg-red-50 transition-colors font-['Open_Sans']">
+                    ĐĂNG NHẬP
+                  </Link>
+                  <Link to="/register" className="px-5 py-2 rounded-full border border-red-600 bg-red-600 text-xs font-bold tracking-wide text-white hover:bg-red-700 hover:border-red-700 transition-colors font-['Open_Sans']">
+                    ĐĂNG KÝ
+                  </Link>
+                </div>
+              )}
             </div>
 
             <button className="md:hidden inline-flex items-center justify-center p-2 rounded-lg border border-white/30 bg-black/20 transition-colors duration-300" onClick={() => setIsMobileMenuOpen(v => !v)} aria-label={isMobileMenuOpen ? 'Đóng menu' : 'Mở menu'} aria-expanded={isMobileMenuOpen} aria-controls="mobile-menu">
@@ -133,37 +193,22 @@ const Navbar = () => {
       {isMobileMenuOpen && <div id="mobile-menu" className="md:hidden border-t border-white/20 bg-black/40 backdrop-blur-md transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
             <nav className="space-y-2">
-              <Link to={`/#${HOME_SECTION_TRANG_CHU}`} onClick={() => {
-              scrollToTrangChu();
-              setIsMobileMenuOpen(false);
-            }} className={navMobileClass('home')}>
-                Trang chủ
-              </Link>
-              <Link to={`/#${HOME_SECTION_NOI_LAM_VIEC}`} onClick={() => {
-              scrollToNoiLamViec();
-              setIsMobileMenuOpen(false);
-            }} className={navMobileClass(null)}>
-                Về FINDME
-              </Link>
               <Link to="/jobs" onClick={() => setIsMobileMenuOpen(false)} className={navMobileClass('jobs')}>
-                Tuyển dụng
+                Việc làm
               </Link>
-              <Link to={`/#${HOME_SECTION_DAI_NGO}`} onClick={() => {
-              scrollToDaiNgo();
-              setIsMobileMenuOpen(false);
-            }} className={navMobileClass('dai-ngo')}>
-                Đãi ngộ
+              <Link to="/companies" onClick={() => setIsMobileMenuOpen(false)} className={navMobileClass('companies')}>
+                Công ty
               </Link>
-              <Link to={`/#${HOME_SECTION_SU_KIEN}`} onClick={() => {
-              scrollToSuKien();
-              setIsMobileMenuOpen(false);
-            }} className={navMobileClass('su-kien')}>
-                Sự kiện
+              <Link to="/applicant/applications" onClick={() => setIsMobileMenuOpen(false)} className={navMobileClass('applications')}>
+                Đơn ứng tuyển
+              </Link>
+              <Link to="/saved-jobs" onClick={() => setIsMobileMenuOpen(false)} className={navMobileClass('saved-jobs')}>
+                Việc làm đã lưu
               </Link>
             </nav>
             <div className="pt-4 border-t border-red-100 dark:border-red-900/60 space-y-3">
               <div className="grid grid-cols-1 gap-3">
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-['Open_Sans'] text-center font-semibold">
+                <Link to="/login" state={{ from: location }} onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-['Open_Sans'] text-center font-semibold">
                   ĐĂNG NHẬP
                 </Link>
               </div>

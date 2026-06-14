@@ -11,7 +11,11 @@ const {
   sendOtpEmail
 } = require('../services/emailService');
 const { uploadResumeBuffer } = require('../services/cloudinaryService');
-const ALLOWED_ROLES = new Set(['applicant', 'hr']);
+const ALLOWED_ROLES = new Set(['applicant', 'recruiter']);
+/**
+ * Hàm phụ trợ: Lấy cấu hình cho OTP từ biến môi trường (hoặc dùng giá trị mặc định).
+ * Cấu hình bao gồm: thời gian hết hạn, số lần thử tối đa, thời gian chờ gửi lại (cooldown), số lần gửi tối đa.
+ */
 function otpConfig() {
   return {
     expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10),
@@ -20,10 +24,19 @@ function otpConfig() {
     maxResends: parseInt(process.env.OTP_MAX_RESENDS || '5', 10)
   };
 }
+/**
+ * Hàm phụ trợ: Sinh ngẫu nhiên một mã OTP gồm 6 chữ số.
+ */
 function generateCode() {
   const num = crypto.randomInt(0, 1000000);
   return num.toString().padStart(6, '0');
 }
+/**
+ * API Endpoint: Gửi mã OTP xác thực tới email của người dùng.
+ * - Kiểm tra giới hạn số lần yêu cầu OTP (rate limiting) và thời gian chờ (cooldown).
+ * - Sinh mã OTP mới, băm (hash) mã này rồi lưu vào database.
+ * - Gọi dịch vụ email (emailService) để gửi mã OTP.
+ */
 async function sendOtp(req, res) {
   try {
     const errors = validationResult(req);
@@ -122,6 +135,12 @@ async function sendOtp(req, res) {
     });
   }
 }
+/**
+ * API Endpoint: Xác minh mã OTP do người dùng nhập.
+ * - So sánh mã nhập vào với mã đã băm (hash) trong database.
+ * - Trừ đi số lần thử nếu nhập sai.
+ * - Nếu xác minh thành công và là OTP đăng ký (PendingRegistration), tiến hành tạo tài khoản User chính thức và đẩy file CV (nếu có) lên lưu trữ.
+ */
 async function verifyOtp(req, res) {
   try {
     const errors = validationResult(req);
@@ -205,11 +224,35 @@ async function verifyOtp(req, res) {
           password: pendingReg.userData.password,
           phone: pendingReg.userData.phone,
           role: safeRole,
+          companyName: pendingReg.userData.companyName,
+          companyAddress: pendingReg.userData.companyAddress,
+          jobTitle: pendingReg.userData.jobTitle,
           profile: pendingReg.userData.profile,
           accountStatus: 'active',
           emailVerifiedAt: new Date()
         };
-        user = await User.create(userData);
+        let existingUser = await User.findOne({ email: pendingReg.email.toLowerCase().trim() });
+        if (existingUser) {
+          existingUser.role = safeRole;
+          existingUser.firstName = pendingReg.userData.firstName || existingUser.firstName;
+          existingUser.lastName = pendingReg.userData.lastName || existingUser.lastName;
+          existingUser.password = pendingReg.userData.password || existingUser.password;
+          existingUser.phone = pendingReg.userData.phone || existingUser.phone;
+          existingUser.companyName = pendingReg.userData.companyName || existingUser.companyName;
+          existingUser.companyAddress = pendingReg.userData.companyAddress || existingUser.companyAddress;
+          existingUser.jobTitle = pendingReg.userData.jobTitle || existingUser.jobTitle;
+          existingUser.accountStatus = 'active';
+          existingUser.emailVerifiedAt = new Date();
+          if (pendingReg.userData.profile) {
+            existingUser.profile = {
+              ...existingUser.profile,
+              ...pendingReg.userData.profile
+            };
+          }
+          user = await existingUser.save();
+        } else {
+          user = await User.create(userData);
+        }
         let resumeId = null;
         if (pendingReg.resumeData && pendingReg.resumeData.fileData) {
           try {

@@ -3,10 +3,11 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 const Layout = ({
   children,
-  showFooter = true
+  showFooter = true,
+  showNavbar = true
 }) => {
   return <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col transition-colors duration-300">
-      <Navbar />
+      {showNavbar && <Navbar />}
       <main className="flex-grow">
         {children}
       </main>

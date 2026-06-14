@@ -5,7 +5,13 @@ const {
 } = require('express-validator');
 const User = require('../models/User');
 const PendingRegistration = require('../models/PendingRegistration');
-const ALLOWED_ROLES = new Set(['applicant', 'hr']);
+const ALLOWED_ROLES = new Set(['applicant', 'recruiter']);
+/**
+ * API Endpoint: Đăng ký tài khoản người dùng mới (Applicant hoặc Recruiter).
+ * - Lưu tạm thông tin đăng ký (PendingRegistration) trước khi xác thực OTP.
+ * - Cho phép upload file CV cùng lúc khi đăng ký tài khoản (dành cho ứng viên).
+ * - Mã hóa mật khẩu bằng bcrypt.
+ */
 const register = async (req, res) => {
   let normalizedEmail = '';
   try {
@@ -28,7 +34,10 @@ const register = async (req, res) => {
       careerField,
       primarySkills,
       workExperienceEntries,
-      role = 'applicant'
+      role = 'applicant',
+      companyName,
+      companyAddress,
+      jobTitle
     } = req.body;
     const normalizedRole = ALLOWED_ROLES.has(role) ? role : 'applicant';
     normalizedEmail = email.toLowerCase().trim();
@@ -36,18 +45,45 @@ const register = async (req, res) => {
       email: normalizedEmail
     });
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email này đã tồn tại trong hệ thống'
-      });
+      if (normalizedRole === 'recruiter' && existingUser.role === 'applicant') {
+        // Allow upgrading candidate to recruiter
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Email này đã tồn tại trong hệ thống'
+        });
+      }
     }
     let pendingReg = await PendingRegistration.findOne({
       email: normalizedEmail,
       type: 'applicant'
     });
-    const nameParts = fullName ? fullName.trim().split(' ') : ['', ''];
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    let finalFullName = fullName ? fullName.trim() : '';
+    if (!finalFullName && normalizedRole === 'applicant') {
+      const emailPrefix = normalizedEmail.split('@')[0];
+      finalFullName = emailPrefix
+        .replace(/[._-]/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+        .trim();
+      if (!finalFullName) {
+        finalFullName = 'Ứng viên';
+      }
+    }
+    const nameParts = finalFullName.split(' ').filter(Boolean);
+    let firstName = '';
+    let lastName = '';
+    if (nameParts.length >= 2) {
+      firstName = nameParts[0];
+      lastName = nameParts.slice(1).join(' ');
+    } else if (nameParts.length === 1) {
+      firstName = nameParts[0];
+      lastName = 'Ứng viên';
+    } else {
+      firstName = 'Ứng viên';
+      lastName = 'Mới';
+    }
     let parsedEducationEntries = [];
     let parsedWorkExperienceEntries = [];
     let parsedPrimarySkills = [];
@@ -70,8 +106,11 @@ const register = async (req, res) => {
       password: hashedPassword,
       phone,
       role: normalizedRole,
+      companyName,
+      companyAddress,
+      jobTitle,
       profile: {
-        fullName,
+        fullName: finalFullName,
         careerField,
         currentLocation,
         currentStatus,
@@ -153,6 +192,12 @@ const register = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Đăng nhập vào hệ thống.
+ * - Kiểm tra email và mật khẩu (dùng bcrypt).
+ * - Kiểm tra trạng thái tài khoản (bị khóa, chưa xác thực email, v.v.).
+ * - Sinh ra token JWT và trả về cùng thông tin chi tiết user.
+ */
 const login = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -236,6 +281,9 @@ const login = async (req, res) => {
         role: user.role,
         profilePicture: user.profilePicture,
         avatar: user.avatar,
+        companyName: user.companyName,
+        companyAddress: user.companyAddress,
+        jobTitle: user.jobTitle,
         profile: {
           currentLocation: user.profile?.currentLocation || user.location,
           careerField: user.profile?.careerField,
@@ -262,6 +310,10 @@ const login = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Lấy thông tin tài khoản hiện tại (Get Me).
+ * - Dùng để khôi phục session (phiên đăng nhập) của người dùng từ token JWT được gửi lên.
+ */
 const getMe = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -282,6 +334,9 @@ const getMe = async (req, res) => {
         role: user.role,
         profilePicture: user.profilePicture,
         avatar: user.avatar,
+        companyName: user.companyName,
+        companyAddress: user.companyAddress,
+        jobTitle: user.jobTitle,
         profile: user.profile
       }
     });
@@ -293,6 +348,10 @@ const getMe = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Đăng xuất tài khoản.
+ * - Do JWT là stateless, việc đăng xuất thực chất được xử lý ở phía client bằng cách xóa token khỏi localStorage/cookie.
+ */
 const logout = (req, res) => {
   res.json({
     success: true,

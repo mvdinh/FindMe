@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../layout/AdminLayout";
-import AdminModal from "../components/AdminModal";
 import {
   ADMIN_PAGE,
   ADMIN_PAGE_HEADER,
@@ -9,7 +9,7 @@ import {
   ADMIN_NATIVE_FIELD,
   HR_TABLE_WRAP,
 } from "../adminLayoutClasses";
-import { formatDateVN } from "../adminDateFormat";
+import { formatDateVN } from "@/utils/dateFormat";
 import Pagination from "@/components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,6 +41,7 @@ import {
   Eye,
   MoreHorizontal,
   Search,
+  Calendar,
 } from "lucide-react";
 import { useApiRequest } from "../../hooks/useApiRequest";
 import { Separator } from "@/components/ui/separator";
@@ -48,6 +49,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 const AllJobsPage = () => {
+  const navigate = useNavigate();
   const { makeJsonRequest } = useApiRequest();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +62,8 @@ const AllJobsPage = () => {
   const [filterJobType, setFilterJobType] = useState("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [deadlineFrom, setDeadlineFrom] = useState("");
+  const [deadlineTo, setDeadlineTo] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const [page, setPage] = useState(1);
@@ -87,6 +91,8 @@ const AllJobsPage = () => {
     if (searchTerm) params.push(`search=${encodeURIComponent(searchTerm)}`);
     if (fromDate) params.push(`fromDate=${encodeURIComponent(fromDate)}`);
     if (toDate) params.push(`toDate=${encodeURIComponent(toDate)}`);
+    if (deadlineFrom) params.push(`deadlineFrom=${encodeURIComponent(deadlineFrom)}`);
+    if (deadlineTo) params.push(`deadlineTo=${encodeURIComponent(deadlineTo)}`);
     if (sortBy) params.push(`sortBy=${encodeURIComponent(sortBy)}`);
     if (sortOrder) params.push(`sortOrder=${encodeURIComponent(sortOrder)}`);
     if (filterPostedById !== "all")
@@ -102,6 +108,8 @@ const AllJobsPage = () => {
     searchTerm,
     fromDate,
     toDate,
+    deadlineFrom,
+    deadlineTo,
     sortBy,
     sortOrder,
     page,
@@ -120,8 +128,8 @@ const AllJobsPage = () => {
         setDepartments(data.departments || []);
         let incomingJobTypes = data.jobTypes || [];
         const lower = incomingJobTypes.map((j) => (j || "").toLowerCase());
-        ["remote", "hybrid"].forEach((opt) => {
-          if (!lower.includes(opt)) incomingJobTypes.push(opt);
+        ["Remote", "Hybrid"].forEach((opt) => {
+          if (!lower.includes(opt.toLowerCase())) incomingJobTypes.push(opt);
         });
         setJobTypes(incomingJobTypes);
         if (data.pagination) setPagination(data.pagination);
@@ -145,6 +153,8 @@ const AllJobsPage = () => {
     searchTerm,
     fromDate,
     toDate,
+    deadlineFrom,
+    deadlineTo,
     sortBy,
     sortOrder,
     limit,
@@ -220,17 +230,7 @@ const AllJobsPage = () => {
     else setSelectedJobs(new Set(jobs.map((j) => j.id)));
   };
   const openJobDetail = async (job) => {
-    setSelectedJob(job);
-    try {
-      const detail = await makeJsonRequest(`/api/admin/jobs/${job.id}`);
-      if (detail?.job)
-        setSelectedJob((prev) => ({
-          ...prev,
-          ...detail.job,
-        }));
-    } catch {
-      /* keep list row; detail extras optional */
-    }
+    navigate(`/admin/jobs/${job.id}`);
   };
   const getStatusColor = (status) => {
     switch (status) {
@@ -240,8 +240,7 @@ const AllJobsPage = () => {
         return "border-destructive/30 bg-destructive/10 text-destructive";
       case "draft":
         return "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200";
-      case "inactive":
-        return "border-destructive/30 bg-destructive/10 text-destructive";
+
       default:
         return "border-border bg-muted text-foreground";
     }
@@ -251,7 +250,7 @@ const AllJobsPage = () => {
       active: "đang hoạt động",
       closed: "đã đóng",
       draft: "bản nháp",
-      inactive: "không hoạt động",
+
     };
     return map[status] || status;
   };
@@ -259,8 +258,8 @@ const AllJobsPage = () => {
     const s = (status || "").toString().toLowerCase();
     const map = {
       submitted: "Đã nộp",
-      under_review: "Đang xem xét",
-      shortlisted: "Đang xem xét",
+      under_review: "Chờ xét duyệt",
+      shortlisted: "Chờ xét duyệt",
       interview_scheduled: "Đã mời phỏng vấn",
       interview_confirmed: "Đã xác nhận lịch phỏng vấn",
       interview_passed: "Đạt phỏng vấn",
@@ -276,14 +275,15 @@ const AllJobsPage = () => {
   const activeJobs = totals?.activeJobs ?? 0;
   const totalApplications = totals?.totalApplications ?? 0;
   const totalInterviewPassed = totals?.totalInterviewPassed ?? 0;
+  const closedJobs = totals?.closedJobs ?? 0;
   return (
     <AdminLayout>
       <div className={ADMIN_PAGE}>
         <div className={ADMIN_PAGE_HEADER}>
           <div className="min-w-0 flex-1">
-            <h1 className={ADMIN_H1}>Tổng quan tất cả việc làm</h1>
+            <h1 className={ADMIN_H1}>Quản lý tin tuyển dụng</h1>
             <p className={ADMIN_SUBTITLE}>
-              Theo dõi tất cả tin tuyển dụng trong tổ chức của bạn.
+              Theo dõi tất cả tin tuyển dụng
             </p>
           </div>
         </div>
@@ -298,12 +298,12 @@ const AllJobsPage = () => {
           </Alert>
         )}
 
-        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 justify-center items-center">
+        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Card>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">
+            <CardContent className="flex items-center gap-4 px-4 py-2">
+              <div className="rounded-lg bg-primary/10 p-2 ring-1 ring-primary/20">
                 <svg
-                  className="size-6 stroke-current text-primary"
+                  className="size-5 stroke-current text-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -317,19 +317,19 @@ const AllJobsPage = () => {
               </div>
               <div>
                 <p className="font-['Roboto'] text-sm font-medium text-muted-foreground">
-                  Tổng việc làm
+                  Số tin tuyển dụng
                 </p>
-                <p className="font-['Open_Sans'] text-2xl font-bold text-foreground">
+                <p className="font-['Open_Sans'] text-2xl font-bold text-foreground leading-none mt-1">
                   {totalJobs}
                 </p>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-sky-500/10 p-3 ring-1 ring-sky-500/20">
+            <CardContent className="flex items-center gap-4 px-4 py-2">
+              <div className="rounded-lg bg-sky-500/10 p-2 ring-1 ring-sky-500/20">
                 <svg
-                  className="size-6 stroke-current text-sky-600"
+                  className="size-5 stroke-current text-sky-600"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -343,19 +343,19 @@ const AllJobsPage = () => {
               </div>
               <div>
                 <p className="font-['Roboto'] text-sm font-medium text-muted-foreground">
-                  Việc làm đang hoạt động
+                  Số tin hoạt động
                 </p>
-                <p className="font-['Open_Sans'] text-2xl font-bold text-foreground">
+                <p className="font-['Open_Sans'] text-2xl font-bold text-foreground leading-none mt-1">
                   {activeJobs}
                 </p>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-blue-500/10 p-3 ring-1 ring-blue-500/20">
+            <CardContent className="flex items-center gap-4 px-4 py-2">
+              <div className="rounded-lg bg-blue-500/10 p-2 ring-1 ring-blue-500/20">
                 <svg
-                  className="size-6 stroke-current text-blue-600"
+                  className="size-5 stroke-current text-blue-600"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -369,36 +369,10 @@ const AllJobsPage = () => {
               </div>
               <div>
                 <p className="font-['Roboto'] text-sm font-medium text-muted-foreground">
-                  Tổng đơn ứng tuyển
+                  Số tin đã đóng
                 </p>
-                <p className="font-['Open_Sans'] text-2xl font-bold text-foreground">
-                  {totalApplications}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-emerald-500/10 p-3 ring-1 ring-emerald-500/20">
-                <svg
-                  className="size-6 stroke-current text-emerald-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="font-['Roboto'] text-sm font-medium text-muted-foreground">
-                  Ứng viên pass phỏng vấn
-                </p>
-                <p className="font-['Open_Sans'] text-2xl font-bold text-foreground">
-                  {totalInterviewPassed}
+                <p className="font-['Open_Sans'] text-2xl font-bold text-foreground leading-none mt-1">
+                  {closedJobs}
                 </p>
               </div>
             </CardContent>
@@ -407,65 +381,48 @@ const AllJobsPage = () => {
 
         <Card className="mb-3 shadow-sm">
           <CardContent className="py-2 px-3 space-y-2">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-center">
-              <div className="relative w-full md:max-w-md">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tìm theo tiêu đề, phòng ban hoặc địa điểm"
-                  className="min-h-11 pl-10 font-['Roboto']"
-                />
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                {["all", "active", "closed", "draft", "inactive"].map((s) => (
-                  <Button
-                    key={s}
-                    type="button"
-                    variant={filterStatus === s ? "default" : "outline"}
-                    size="sm"
-                    className="rounded-full font-['Roboto']"
-                    onClick={() => {
-                      setFilterStatus(s);
-                      setPage(1);
-                    }}
-                  >
-                    {s === "all"
-                      ? "Tất cả"
-                      : s === "active"
-                        ? "Đang hoạt động"
-                        : s === "closed"
-                          ? "Đã đóng"
-                          : s === "draft"
-                            ? "Bản nháp"
-                            : s === "inactive"
-                              ? "Không hoạt động"
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative w-full md:w-[300px]">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Tìm tiêu đề, công ty..."
+                      className="min-h-10 pl-10 font-['Roboto'] text-sm"
+                    />
+                  </div>
+                  {["all", "active", "closed", "draft"].map((s) => (
+                    <Button
+                      key={s}
+                      type="button"
+                      variant={filterStatus === s ? "default" : "outline"}
+                      size="sm"
+                      className="rounded-full font-['Roboto']"
+                      onClick={() => {
+                        setFilterStatus(s);
+                        setPage(1);
+                      }}
+                    >
+                      {s === "all"
+                        ? "Tất cả"
+                        : s === "active"
+                          ? "Đang hoạt động"
+                          : s === "closed"
+                            ? "Đã đóng"
+                            : s === "draft"
+                              ? "Chờ phê duyệt"
                               : s}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
+                    </Button>
+                  ))}
+                </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="font-['Roboto']"
-                  onClick={() => setShowAdvanced((prev) => !prev)}
-                >
-                  <ChevronRight
-                    className={cn(
-                      "size-4 transition-transform",
-                      showAdvanced && "rotate-90",
-                    )}
-                  />
-                  {showAdvanced ? "Ẩn bộ lọc" : "Thêm bộ lọc"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="font-['Roboto'] text-destructive hover:text-destructive"
+                  className="font-['Roboto'] text-destructive hover:text-destructive shrink-0"
                   onClick={() => {
                     setSearchTerm("");
                     setFilterStatus("all");
@@ -474,188 +431,58 @@ const AllJobsPage = () => {
                     setFilterJobType("all");
                     setFromDate("");
                     setToDate("");
+                    setDeadlineFrom("");
+                    setDeadlineTo("");
                     setSortBy("createdAt");
                     setSortOrder("desc");
                     setPage(1);
                   }}
                 >
-                  Xóa
+                  Xóa lọc
                 </Button>
               </div>
-            </div>
 
-            <div className="flex flex-wrap gap-2">
-              {filterDepartment !== "all" && (
-                <Badge
-                  variant="secondary"
-                  className="gap-1 pr-1 font-['Roboto'] font-normal"
-                >
-                  Phòng ban: {filterDepartment}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    className="size-5 shrink-0"
-                    onClick={() => setFilterDepartment("all")}
-                    aria-label="Bỏ lọc phòng ban"
-                  >
-                    ×
-                  </Button>
-                </Badge>
-              )}
-              {filterJobType !== "all" && (
-                <Badge
-                  variant="secondary"
-                  className="gap-1 pr-1 font-['Roboto'] font-normal"
-                >
-                  Loại: {filterJobType}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    className="size-5 shrink-0"
-                    onClick={() => setFilterJobType("all")}
-                    aria-label="Bỏ lọc loại việc"
-                  >
-                    ×
-                  </Button>
-                </Badge>
-              )}
-              {filterPostedById !== "all" && (
-                <Badge
-                  variant="secondary"
-                  className="gap-1 pr-1 font-['Roboto'] font-normal"
-                >
-                  HR: {selectedHrLabel}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    className="size-5 shrink-0"
-                    onClick={() => setFilterPostedById("all")}
-                    aria-label="Bỏ lọc HR"
-                  >
-                    ×
-                  </Button>
-                </Badge>
-              )}
-              {(fromDate || toDate) && (
-                <Badge
-                  variant="secondary"
-                  className="gap-1 pr-1 font-['Roboto'] font-normal"
-                >
-                  Ngày: {fromDate || "…"} → {toDate || "…"}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    className="size-5 shrink-0"
-                    onClick={() => {
-                      setFromDate("");
-                      setToDate("");
-                    }}
-                    aria-label="Bỏ lọc ngày"
-                  >
-                    ×
-                  </Button>
-                </Badge>
-              )}
-            </div>
-
-            {showAdvanced && (
-              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-6">
-                <div className="space-y-2">
-                  <Label className="font-['Roboto'] text-xs">Phòng ban</Label>
-                  <select
-                    value={filterDepartment}
-                    onChange={(e) => setFilterDepartment(e.target.value)}
-                    className={ADMIN_NATIVE_FIELD}
-                  >
-                    <option value="all">Tất cả phòng ban</option>
-                    {departments.map((dep) => (
-                      <option key={dep} value={dep}>
-                        {dep}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-['Roboto'] text-xs">
-                    Loại việc làm
+              <div className="flex flex-wrap items-center gap-4 border-t pt-3">
+                <div className="flex items-center gap-2">
+                  <Label className="font-['Roboto'] text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Ngày đăng:
                   </Label>
-                  <select
-                    value={filterJobType}
-                    onChange={(e) => setFilterJobType(e.target.value)}
-                    className={ADMIN_NATIVE_FIELD}
-                  >
-                    <option value="all">Tất cả loại</option>
-                    {jobTypes.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-['Roboto'] text-xs">Đăng bởi</Label>
-                  <select
-                    value={filterPostedById}
-                    onChange={(e) => setFilterPostedById(e.target.value)}
-                    className={ADMIN_NATIVE_FIELD}
-                  >
-                    <option value="all">Tất cả HR</option>
-                    {hrPosterOptions.map((hr) => (
-                      <option key={hr.id} value={hr.id}>
-                        {hr.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-['Roboto'] text-xs">Từ</Label>
-                  <input
+                  <Input
                     type="date"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
-                    className={ADMIN_NATIVE_FIELD}
+                    className="h-8 w-[130px] font-['Roboto'] text-xs"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-['Roboto'] text-xs">Đến</Label>
-                  <input
+                  <span className="text-muted-foreground">-</span>
+                  <Input
                     type="date"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
-                    className={ADMIN_NATIVE_FIELD}
+                    className="h-8 w-[130px] font-['Roboto'] text-xs"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="font-['Roboto'] text-xs">Sắp xếp</Label>
-                  <select
-                    value={`${sortBy}:${sortOrder}`}
-                    onChange={(e) => {
-                      const [sb, so] = e.target.value.split(":");
-                      setSortBy(sb);
-                      setSortOrder(so);
-                    }}
-                    className={ADMIN_NATIVE_FIELD}
-                  >
-                    <option value="createdAt:desc">Mới nhất</option>
-                    <option value="createdAt:asc">Cũ nhất</option>
-                    <option value="title:asc">Tiêu đề A-Z</option>
-                    <option value="title:desc">Tiêu đề Z-A</option>
-                    <option value="applications:desc">
-                      Đơn ứng tuyển cao-thấp
-                    </option>
-                    <option value="applications:asc">
-                      Đơn ứng tuyển thấp-cao
-                    </option>
-                    <option value="status:asc">Trạng thái A-Z</option>
-                    <option value="status:desc">Trạng thái Z-A</option>
-                  </select>
+                <div className="flex items-center gap-2">
+                  <Label className="font-['Roboto'] text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Ngày hết hạn:
+                  </Label>
+                  <Input
+                    type="date"
+                    value={deadlineFrom}
+                    onChange={(e) => setDeadlineFrom(e.target.value)}
+                    className="h-8 w-[130px] font-['Roboto'] text-xs"
+                  />
+                  <span className="text-muted-foreground">-</span>
+                  <Input
+                    type="date"
+                    value={deadlineTo}
+                    onChange={(e) => setDeadlineTo(e.target.value)}
+                    className="h-8 w-[130px] font-['Roboto'] text-xs"
+                  />
                 </div>
               </div>
-            )}
+            </div>
+
+            
           </CardContent>
         </Card>
 
@@ -724,19 +551,19 @@ const AllJobsPage = () => {
                       />
                     </TableHead>
                     <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Chi tiết việc làm
+                      Tin tuyển dụng
                     </TableHead>
                     <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Đăng bởi
+                      Nhà tuyển dụng
                     </TableHead>
                     <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Đơn ứng tuyển
+                      Ngày đăng tin
+                    </TableHead>
+                    <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Ngày hết hạn
                     </TableHead>
                     <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Trạng thái
-                    </TableHead>
-                    <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Ngày đăng
                     </TableHead>
                     <TableHead className="px-6 text-right font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Thao tác
@@ -760,37 +587,31 @@ const AllJobsPage = () => {
                           <div className="font-['Open_Sans'] text-sm font-medium text-foreground">
                             {job.title}
                           </div>
-                          <div className="font-['Roboto'] text-sm text-muted-foreground">
-                            {job.department} • {job.location} • {job.type}
-                          </div>
-                          <div className="mt-1 font-['Roboto'] text-sm text-muted-foreground">
-                            {job.salary}
-                          </div>
+                          
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <div className="font-['Open_Sans'] text-sm font-medium text-foreground">
-                          {job.postedBy}
+                          {job.company}
                         </div>
+                        
                       </TableCell>
-                      <TableCell className="px-6 py-4">
-                        <div className="font-['Roboto'] text-sm text-foreground">
-                          <span>{job.applications} đã nộp</span>
-                        </div>
+                      <TableCell className="px-6 py-4 font-['Roboto'] text-sm text-muted-foreground">
+                        {formatDateVN(job.postedDate) || "—"}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 font-['Roboto'] text-sm text-muted-foreground">
+                        {formatDateVN(job.deadline) || "—"}
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <Badge
                           variant="outline"
                           className={cn(
-                            "font-['Roboto'] font-normal",
+                            "font-['Roboto'] font-normal whitespace-nowrap",
                             getStatusColor(job.status),
                           )}
                         >
                           {getStatusLabel(job.status)}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 font-['Roboto'] text-sm text-muted-foreground">
-                        {formatDateVN(job.postedDate) || "—"}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -821,6 +642,19 @@ const AllJobsPage = () => {
                               className="w-48 min-w-[12rem] font-['Roboto']"
                             >
                               <DropdownMenuItem
+                                disabled={job.status === "closed"}
+                                onClick={() =>
+                                  updateJobStatusDirect(job.id, "closed")
+                                }
+                                className="gap-2 text-destructive focus:text-destructive"
+                              >
+                                <span className="inline-block size-2 rounded-full bg-red-500" />
+                                Đóng tin
+                                {job.status === "closed" && (
+                                  <Check className="ml-auto size-3 text-red-600" />
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 disabled={job.status === "active"}
                                 onClick={() =>
                                   updateJobStatusDirect(job.id, "active")
@@ -828,35 +662,9 @@ const AllJobsPage = () => {
                                 className="gap-2"
                               >
                                 <span className="inline-block size-2 rounded-full bg-green-500" />
-                                Xuất bản
+                                Kích hoạt
                                 {job.status === "active" && (
                                   <Check className="ml-auto size-3 text-green-600" />
-                                )}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                disabled={job.status === "closed"}
-                                onClick={() =>
-                                  updateJobStatusDirect(job.id, "closed")
-                                }
-                                className="gap-2"
-                              >
-                                <span className="inline-block size-2 rounded-full bg-red-500" />
-                                Đóng
-                                {job.status === "closed" && (
-                                  <Check className="ml-auto size-3 text-red-600" />
-                                )}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                disabled={job.status === "inactive"}
-                                onClick={() =>
-                                  updateJobStatusDirect(job.id, "inactive")
-                                }
-                                className="gap-2"
-                              >
-                                <span className="inline-block size-2 rounded-full bg-muted-foreground" />
-                                Lưu trữ
-                                {job.status === "inactive" && (
-                                  <Check className="ml-auto size-3 text-muted-foreground" />
                                 )}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -879,301 +687,6 @@ const AllJobsPage = () => {
             itemLabel="việc làm"
           />
         </Card>
-
-        <AdminModal
-          open={!!selectedJob}
-          onClose={() => setSelectedJob(null)}
-          title="Chi tiết việc làm"
-          size="2xl"
-          footer={
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                className="px-5 py-2.5 text-sm"
-                onClick={() => setSelectedJob(null)}
-              >
-                Đóng
-              </Button>
-            </div>
-          }
-        >
-          {selectedJob && (
-            <>
-              <div className="mb-6 space-y-6">
-                <div className="flex justify-end">
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "font-['Roboto'] font-normal",
-                      getStatusColor(selectedJob.status),
-                    )}
-                  >
-                    {getStatusLabel(selectedJob.status)}
-                  </Badge>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <h4 className="font-['Open_Sans'] text-lg font-medium text-foreground">
-                      {selectedJob.title}
-                    </h4>
-                    <p className="font-['Roboto'] text-sm text-muted-foreground">
-                      {selectedJob.department} • {selectedJob.location}
-                    </p>
-                  </div>
-                  <div className="mt-1 grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-muted-foreground font-['Roboto']">
-                        Đăng bởi:
-                      </span>
-                      <p className="text-foreground font-['Roboto']">
-                        {selectedJob.postedBy}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-muted-foreground font-['Roboto']">
-                        Loại:
-                      </span>
-                      <p className="text-foreground font-['Roboto']">
-                        {selectedJob.type}
-                      </p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <span className="font-medium text-muted-foreground font-['Roboto']">
-                        Lương:
-                      </span>
-                      <p className="mt-0.5 text-foreground font-['Roboto']">
-                        {selectedJob.salary}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h5 className="mb-2 font-['Roboto'] font-medium text-foreground">
-                    Thống kê đơn ứng tuyển
-                  </h5>
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <p className="font-['Open_Sans'] text-2xl font-bold text-foreground">
-                        {selectedJob.applicationStats?.total ??
-                          selectedJob.applications}
-                      </p>
-                      <p className="font-['Roboto'] text-xs text-muted-foreground">
-                        Đã nộp
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-['Open_Sans'] text-2xl font-bold text-foreground">
-                        {selectedJob.applicationStats?.interviewPassed ??
-                          selectedJob.interviewPassed ??
-                          0}
-                      </p>
-                      <p className="font-['Roboto'] text-xs text-muted-foreground">
-                        Pass phỏng vấn (đạt)
-                      </p>
-                    </div>
-                  </div>
-                  {selectedJob.applicationStats?.byStatus && (
-                    <div className="grid grid-cols-2 gap-2 font-['Roboto'] text-xs text-muted-foreground">
-                      {Object.entries(selectedJob.applicationStats.byStatus)
-                        .filter(([, v]) => v && v > 0)
-                        .map(([k, v]) => (
-                          <div key={k} className="flex justify-between gap-2">
-                            <span>{getApplicationStatusLabel(k)}</span>
-                            <span className="font-medium text-foreground">
-                              {v}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className="space-y-8">
-                  <div className="space-y-3">
-                    <h5 className="font-['Roboto'] text-sm font-semibold tracking-wide text-foreground">
-                      Thông tin cơ bản
-                    </h5>
-                    <dl className="grid grid-cols-2 gap-x-4 gap-y-3 font-['Roboto'] text-sm">
-                      <div>
-                        <dt className="text-muted-foreground">Kinh nghiệm</dt>
-                        <dd className="font-medium text-foreground">
-                          {selectedJob.experienceLevel || "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">Loại địa điểm</dt>
-                        <dd className="font-medium text-foreground">
-                          {selectedJob.locationType || "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">Hạn nộp</dt>
-                        <dd className="font-medium text-foreground">
-                          {selectedJob.applicationDeadline
-                            ? formatDateVN(selectedJob.applicationDeadline) ||
-                              "—"
-                            : "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">
-                          Số ứng viên tối đa
-                        </dt>
-                        <dd className="font-medium text-foreground">
-                          {selectedJob.maxApplicants || "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">Lượt xem</dt>
-                        <dd className="font-medium text-foreground">
-                          {selectedJob.views ?? "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">Ngày tạo</dt>
-                        <dd className="font-medium text-foreground">
-                          {selectedJob.createdAt
-                            ? formatDateVN(selectedJob.createdAt) || "—"
-                            : "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">Ngày xuất bản</dt>
-                        <dd className="font-medium text-foreground">
-                          {selectedJob.publishedAt
-                            ? formatDateVN(selectedJob.publishedAt) || "—"
-                            : "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">Yêu cầu hồ sơ</dt>
-                        <dd className="font-medium text-foreground">
-                          {selectedJob.resumeRequired ? "Có" : "Không"}
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-                  {selectedJob.qualification?.length > 0 && (
-                    <div>
-                      <h5 className="mb-2 font-['Roboto'] text-sm font-semibold text-foreground">
-                        Bằng cấp
-                      </h5>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedJob.qualification.map((q) => (
-                          <Badge
-                            key={q}
-                            variant="secondary"
-                            className="font-['Roboto'] font-normal"
-                          >
-                            {q}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {(selectedJob.requiredSkills?.length > 0 ||
-                    selectedJob.preferredSkills?.length > 0) && (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {selectedJob.requiredSkills?.length > 0 && (
-                        <div>
-                          <h5 className="mb-2 font-['Roboto'] text-sm font-semibold text-foreground">
-                            Kỹ năng bắt buộc
-                          </h5>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedJob.requiredSkills.map((s) => (
-                              <Badge
-                                key={s}
-                                variant="secondary"
-                                className="font-['Roboto'] font-normal"
-                              >
-                                {s}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {selectedJob.preferredSkills?.length > 0 && (
-                        <div>
-                          <h5 className="mb-2 font-['Roboto'] text-sm font-semibold text-foreground">
-                            Kỹ năng ưu tiên
-                          </h5>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedJob.preferredSkills.map((s) => (
-                              <Badge
-                                key={s}
-                                variant="outline"
-                                className="font-['Roboto'] font-normal"
-                              >
-                                {s}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {selectedJob.defaultInterviewRounds?.length > 0 && (
-                    <div>
-                      <h5 className="mb-2 font-['Roboto'] text-sm font-semibold text-foreground">
-                        Vòng phỏng vấn
-                      </h5>
-                      <ol className="list-inside list-decimal space-y-1 font-['Roboto'] text-sm text-foreground">
-                        {selectedJob.defaultInterviewRounds.map((r, i) => (
-                          <li key={i}>{r}</li>
-                        ))}
-                      </ol>
-                    </div>
-                  )}
-                  {selectedJob.description && (
-                    <div>
-                      <h5 className="mb-2 font-['Roboto'] text-sm font-semibold text-foreground">
-                        Mô tả
-                      </h5>
-                      <p className="font-['Roboto'] text-sm leading-relaxed whitespace-pre-wrap text-foreground">
-                        {selectedJob.description}
-                      </p>
-                    </div>
-                  )}
-                  {selectedJob.salaryRange &&
-                    (selectedJob.salaryRange.min ||
-                      selectedJob.salaryRange.max) && (
-                      <div>
-                        <h5 className="mb-2 font-['Roboto'] text-sm font-semibold text-foreground">
-                          Chi tiết lương
-                        </h5>
-                        <p className="font-['Roboto'] text-sm text-foreground">
-                          {selectedJob.salaryRange.min
-                            ? selectedJob.salaryRange.min
-                            : ""}
-                          {selectedJob.salaryRange.min &&
-                          selectedJob.salaryRange.max
-                            ? " - "
-                            : ""}
-                          {selectedJob.salaryRange.max
-                            ? selectedJob.salaryRange.max
-                            : ""}
-                          {selectedJob.salaryRange.currency
-                            ? ` ${selectedJob.salaryRange.currency}`
-                            : ""}
-                          {selectedJob.salaryRange.period
-                            ? ` / ${selectedJob.salaryRange.period}`
-                            : ""}
-                          {selectedJob.salaryRange.format
-                            ? ` (${selectedJob.salaryRange.format})`
-                            : ""}
-                        </p>
-                      </div>
-                    )}
-                </div>
-              </div>
-            </>
-          )}
-        </AdminModal>
       </div>
     </AdminLayout>
   );

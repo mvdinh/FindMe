@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { CACHE_PREFIXES, CACHE_DURATIONS } from '../../utils/cacheUtils';
 import { APP_DATA_CACHE_VERSION } from '../../utils/appCacheVersion';
 import { smartCacheSet } from '../../utils/cacheManager';
-import { formatDateVN } from '../applicantDateFormat';
+import { formatDateVN } from "@/utils/dateFormat";
 import { getRecruitmentCode } from '../../utils/recruitmentCode';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

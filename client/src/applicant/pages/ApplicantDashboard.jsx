@@ -212,7 +212,7 @@ const ApplicantDashboard = () => {
         activities.push({
           id: `review_${app._id}`,
           type: 'application_viewed',
-          message: `Đơn ứng tuyển của bạn cho ${jobTitle} đang được xem xét`,
+          message: `Đơn ứng tuyển của bạn cho ${jobTitle} đang chờ xét duyệt`,
           timestamp: formatTimeAgo(app.updatedAt)
         });
       } else if (app.status === 'interview_scheduled') {
@@ -344,9 +344,9 @@ const ApplicantDashboard = () => {
   const getStatusText = status => {
     const texts = {
       submitted: 'Đã nộp',
-      under_review: 'Đang xem xét',
-      in_review: 'Đang xem xét',
-      shortlisted: 'Đang xem xét',
+      under_review: 'Chờ xét duyệt',
+      in_review: 'Chờ xét duyệt',
+      shortlisted: 'Chờ xét duyệt',
       interview_scheduled: 'Được mời phỏng vấn',
       interview_confirmed: 'Đã xác nhận lịch PV',
       interview_passed: 'Đạt phỏng vấn',

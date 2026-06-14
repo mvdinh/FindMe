@@ -1,0 +1,725 @@
+const express = require('express');
+const {
+  query,
+  body,
+  param,
+  validationResult
+} = require('express-validator');
+const Interview = require('../../global/models/Interview');
+const Application = require('../../global/models/Application');
+const Job = require('../../global/models/Job');
+const User = require('../../global/models/User');
+const {
+  auth,
+  authorize
+} = require('../../global/middleware/auth');
+const mongoose = require('mongoose');
+const router = express.Router();
+const {
+  createAndEmit
+} = require('../../global/services/notificationService');
+const {
+  INTERVIEW_PASSED
+} = require('../../global/constants/applicationStatuses');
+
+router.use(auth, authorize('recruiter', 'admin'));
+
+router.get('/', [query('page').optional().isInt({
+  min: 1
+}).withMessage('Page must be a positive integer'), query('limit').optional().isInt({
+  min: 1,
+  max: 50
+}).withMessage('Limit must be between 1 and 50'), query('status').optional().isIn(['scheduled', 'confirmed', 'completed', 'cancelled', 'rescheduled']).withMessage('Invalid status'), query('type').optional().isIn(['phone', 'video', 'in-person', 'panel']).withMessage('Invalid interview type'), query('interviewerId').optional().isMongoId().withMessage('Invalid interviewer ID'), query('jobId').optional().isMongoId().withMessage('Invalid job ID'), query('dateRange').optional().isIn(['today', 'tomorrow', 'this_week', 'next_week', 'this_month', 'custom']).withMessage('Invalid date range'), query('startDate').optional().isISO8601().withMessage('Start date must be a valid date'), query('endDate').optional().isISO8601().withMessage('End date must be a valid date'), query('sortBy').optional().isIn(['scheduledDate', 'createdAt', 'status', 'type']).withMessage('Invalid sort field'), query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc')], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      type,
+      interviewerId,
+      jobId,
+      dateRange,
+      startDate,
+      endDate,
+      sortBy = 'scheduledDate',
+      sortOrder = 'asc'
+    } = req.query;
+    const recruiterJobs = await Job.find({
+      postedBy: req.user.id
+    }).select('_id');
+    const recruiterJobIds = recruiterJobs.map(job => job._id);
+    const applications = await Application.find({
+      job: {
+        $in: recruiterJobIds
+      }
+    }).select('_id');
+    const applicationIds = applications.map(app => app._id);
+    let filter = {
+      application: {
+        $in: applicationIds
+      }
+    };
+    if (status) filter.status = status;
+    if (type) filter.type = type;
+    if (interviewerId) filter.interviewer = interviewerId;
+    if (jobId) {
+      const jobApplications = await Application.find({
+        job: jobId
+      }).select('_id');
+      const jobApplicationIds = jobApplications.map(app => app._id);
+      filter.application = {
+        $in: jobApplicationIds
+      };
+    }
+    const now = new Date();
+    let dateFilter = {};
+    switch (dateRange) {
+      case 'today':
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+        dateFilter = {
+          $gte: todayStart,
+          $lt: todayEnd
+        };
+        break;
+      case 'tomorrow':
+        const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        const tomorrowEnd = new Date(tomorrowStart.getTime() + 24 * 60 * 60 * 1000);
+        dateFilter = {
+          $gte: tomorrowStart,
+          $lt: tomorrowEnd
+        };
+        break;
+      case 'this_week':
+        const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+        const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+        dateFilter = {
+          $gte: weekStart,
+          $lt: weekEnd
+        };
+        break;
+      case 'next_week':
+        const nextWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 7);
+        const nextWeekEnd = new Date(nextWeekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+        dateFilter = {
+          $gte: nextWeekStart,
+          $lt: nextWeekEnd
+        };
+        break;
+      case 'this_month':
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        dateFilter = {
+          $gte: monthStart,
+          $lt: monthEnd
+        };
+        break;
+      case 'custom':
+        if (startDate || endDate) {
+          if (startDate) dateFilter.$gte = new Date(startDate);
+          if (endDate) dateFilter.$lte = new Date(endDate);
+        }
+        break;
+    }
+    if (Object.keys(dateFilter).length > 0) {
+      filter.scheduledDate = dateFilter;
+    }
+    const skip = (page - 1) * limit;
+    let sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    const interviews = await Interview.find(filter).sort(sort).skip(skip).limit(parseInt(limit)).populate({
+      path: 'application',
+      populate: [{
+        path: 'applicant',
+        select: 'firstName lastName email phone profilePicture'
+      }, {
+        path: 'job',
+        select: 'title department employmentType'
+      }],
+      select: 'aiFeedback applicant job'
+    }).populate('interviewer', 'firstName lastName email').lean();
+    const totalInterviews = await Interview.countDocuments(filter);
+    const totalPages = Math.ceil(totalInterviews / limit);
+    const todayInterviews = await Interview.countDocuments({
+      ...filter,
+      scheduledDate: {
+        $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        $lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+      }
+    });
+    const upcomingInterviews = await Interview.countDocuments({
+      ...filter,
+      scheduledDate: {
+        $gte: now
+      },
+      status: {
+        $in: ['scheduled', 'confirmed']
+      }
+    });
+    res.json({
+      success: true,
+      data: {
+        interviews,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalInterviews,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        },
+        summary: {
+          todayInterviews,
+          upcomingInterviews
+        },
+        filters: {
+          status,
+          type,
+          interviewerId,
+          jobId,
+          dateRange
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get recruiter interviews error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+router.post('/', [body('applicationId').isMongoId().withMessage('Valid application ID is required'), body('interviewerId').isMongoId().withMessage('Valid interviewer ID is required'), body('scheduledDate').isISO8601().withMessage('Scheduled date must be a valid date'), body('scheduledTime').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Scheduled time must be in HH:mm format').custom((value, {
+  req
+}) => {
+  const [hours, minutes] = value.split(':').map(Number);
+  const scheduledDateTime = new Date(req.body.scheduledDate);
+  scheduledDateTime.setHours(hours, minutes, 0, 0);
+  if (scheduledDateTime <= new Date()) {
+    throw new Error('Interview must be scheduled for a future date and time');
+  }
+  return true;
+}), body('duration').isInt({
+  min: 15,
+  max: 480
+}).withMessage('Duration must be between 15 and 480 minutes'), body('type').isIn(['phone', 'video', 'in-person', 'panel']).withMessage('Invalid interview type'), body('location').optional().isLength({
+  min: 1,
+  max: 500
+}).withMessage('Location must be between 1 and 500 characters'), body('meetingLink').optional().isURL().withMessage('Meeting link must be a valid URL'), body('notes').optional().isLength({
+  max: 1000
+}).withMessage('Notes must be less than 1000 characters'), body('interviewQuestions').optional().isArray().withMessage('Interview questions must be an array')], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+    const {
+      applicationId,
+      interviewerId,
+      scheduledDate,
+      scheduledTime,
+      duration,
+      type,
+      location,
+      meetingLink,
+      notes,
+      interviewQuestions
+    } = req.body;
+    const recruiterJobs = await Job.find({
+      postedBy: req.user.id
+    }).select('_id');
+    const recruiterJobIds = recruiterJobs.map(job => job._id);
+    const application = await Application.findOne({
+      _id: applicationId,
+      job: {
+        $in: recruiterJobIds
+      }
+    }).populate('job', 'title').populate('applicant', 'firstName lastName email');
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found or does not belong to your jobs'
+      });
+    }
+    const interviewAllowedStatuses = ['submitted', 'under_review', 'interview_scheduled', 'interview_confirmed', INTERVIEW_PASSED, 'offer_extended'];
+    if (!interviewAllowedStatuses.includes(application.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Không thể lên lịch phỏng vấn cho đơn ở trạng thái hiện tại.'
+      });
+    }
+    const interviewer = await User.findOne({
+      _id: interviewerId,
+      role: 'recruiter'
+    });
+    if (!interviewer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Interviewer not found'
+      });
+    }
+    const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+    const endDateTime = new Date(scheduledDateTime.getTime() + duration * 60000);
+    const sameDayInterviews = await Interview.find({
+      interviewer: interviewerId,
+      status: {
+        $in: ['scheduled', 'confirmed']
+      },
+      scheduledDate
+    }).lean();
+    const conflictingInterview = sameDayInterviews.find(iv => {
+      if (!iv.scheduledTime) return false;
+      const ivStart = new Date(`${iv.scheduledDate}T${iv.scheduledTime}`);
+      const ivEnd = new Date(ivStart.getTime() + (iv.duration || 60) * 60000);
+      return scheduledDateTime < ivEnd && endDateTime > ivStart;
+    });
+    if (conflictingInterview) {
+      return res.status(400).json({
+        success: false,
+        message: 'Interviewer is not available at the scheduled time'
+      });
+    }
+    const interview = new Interview({
+      application: applicationId,
+      interviewer: interviewerId,
+      scheduledDate,
+      scheduledTime,
+      duration,
+      type,
+      location,
+      meetingLink,
+      notes,
+      interviewQuestions,
+      status: 'scheduled',
+      scheduledBy: req.user?.id || new mongoose.Types.ObjectId()
+    });
+    await interview.save();
+    const populatedInterview = await Interview.findById(interview._id).populate({
+      path: 'application',
+      populate: [{
+        path: 'applicant',
+        select: 'firstName lastName email'
+      }, {
+        path: 'job',
+        select: 'title department'
+      }]
+    }).populate('interviewer', 'firstName lastName email').lean();
+    try {
+      await createAndEmit({
+        toUserId: interviewerId,
+        toRole: 'recruiter',
+        type: 'interview',
+        title: 'Đã lên lịch đánh giá',
+        message: `Đã lên lịch đánh giá vào ${scheduledDate} lúc ${scheduledTime} cho ${populatedInterview?.application?.job?.title || 'việc làm'}`,
+        actionUrl: `/recruiter/interviews`,
+        entity: {
+          kind: 'interview',
+          id: interview._id
+        },
+        priority: 'medium',
+        metadata: {
+          scheduledDate,
+          scheduledTime,
+          duration,
+          candidate: populatedInterview?.application?.applicant,
+          job: populatedInterview?.application?.job
+        },
+        createdBy: req.user?.id
+      });
+      const applicantId = application.applicant?._id || application.applicant;
+      if (applicantId) {
+        await createAndEmit({
+          toUserId: applicantId,
+          toRole: 'applicant',
+          type: 'interview',
+          title: 'Đã lên lịch đánh giá',
+          message: `Lịch đánh giá cho ${application?.job?.title || 'việc làm'} của bạn vào ${scheduledDate} lúc ${scheduledTime}`,
+          actionUrl: `/applicant/applications`,
+          entity: {
+            kind: 'interview',
+            id: interview._id
+          },
+          priority: 'medium',
+          metadata: {
+            scheduledDate,
+            scheduledTime,
+            duration
+          },
+          createdBy: req.user?.id
+        });
+      }
+    } catch (e) {
+      console.warn('Failed creating notifications (schedule):', e.message);
+    }
+    res.status(201).json({
+      success: true,
+      message: 'Interview scheduled successfully',
+      data: populatedInterview
+    });
+  } catch (error) {
+    console.error('Schedule interview error:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+router.get('/:id', [param('id').isMongoId().withMessage('Invalid interview ID')], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+    const recruiterJobs = await Job.find({
+      postedBy: req.user.id
+    }).select('_id');
+    const recruiterJobIds = recruiterJobs.map(job => job._id);
+    const applications = await Application.find({
+      job: {
+        $in: recruiterJobIds
+      }
+    }).select('_id');
+    const applicationIds = applications.map(app => app._id);
+    const interview = await Interview.findOne({
+      _id: req.params.id,
+      application: {
+        $in: applicationIds
+      }
+    }).populate({
+      path: 'application',
+      populate: [{
+        path: 'applicant',
+        select: 'firstName lastName email phone profilePicture profile'
+      }, {
+        path: 'job',
+        select: 'title department location employmentType requirements skills'
+      }]
+    }).populate('interviewer', 'firstName lastName email phone').populate('scheduledBy', 'firstName lastName').lean();
+    if (!interview) {
+      return res.status(404).json({
+        success: false,
+        message: 'Interview not found'
+      });
+    }
+    res.json({
+      success: true,
+      data: interview
+    });
+  } catch (error) {
+    console.error('Get interview by ID error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+router.put('/:id', [param('id').isMongoId().withMessage('Invalid interview ID'), body('scheduledDate').optional().isISO8601().withMessage('Scheduled date must be a valid date'), body('scheduledTime').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Scheduled time must be in HH:mm format'), body('duration').optional().isInt({
+  min: 15,
+  max: 480
+}).withMessage('Duration must be between 15 and 480 minutes'), body('type').optional().isIn(['phone', 'video', 'in-person', 'panel']).withMessage('Invalid interview type'), body('location').optional().isLength({
+  min: 1,
+  max: 500
+}).withMessage('Location must be between 1 and 500 characters'), body('meetingLink').optional().isURL().withMessage('Meeting link must be a valid URL'), body('notes').optional().isLength({
+  max: 1000
+}).withMessage('Notes must be less than 1000 characters')], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+    const recruiterJobs = await Job.find({
+      postedBy: req.user.id
+    }).select('_id');
+    const recruiterJobIds = recruiterJobs.map(job => job._id);
+    const applications = await Application.find({
+      job: {
+        $in: recruiterJobIds
+      }
+    }).select('_id');
+    const applicationIds = applications.map(app => app._id);
+    const interview = await Interview.findOne({
+      _id: req.params.id,
+      application: {
+        $in: applicationIds
+      }
+    });
+    if (!interview) {
+      return res.status(404).json({
+        success: false,
+        message: 'Interview not found'
+      });
+    }
+    const oldDate = interview.scheduledDate;
+    const oldTime = interview.scheduledTime;
+    Object.keys(req.body).forEach(key => {
+      interview[key] = req.body[key];
+    });
+    interview.updatedAt = new Date();
+    if (req.body.scheduledDate || req.body.scheduledTime) {
+      if (interview.status === 'completed') {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot reschedule a completed interview'
+        });
+      }
+      interview.status = 'rescheduled';
+      interview.rescheduleHistory = interview.rescheduleHistory || [];
+      interview.rescheduleHistory.push({
+        oldDate,
+        oldTime,
+        newDate: interview.scheduledDate,
+        newTime: interview.scheduledTime,
+        rescheduledBy: req.user?.id || new mongoose.Types.ObjectId(),
+        rescheduledAt: new Date(),
+        reason: req.body.rescheduleReason || 'Recruiter reschedule'
+      });
+    }
+    await interview.save();
+    const updatedInterview = await Interview.findById(interview._id).populate({
+      path: 'application',
+      populate: [{
+        path: 'applicant',
+        select: 'firstName lastName email'
+      }, {
+        path: 'job',
+        select: 'title department'
+      }]
+    }).populate('interviewer', 'firstName lastName').lean();
+    res.json({
+      success: true,
+      message: 'Interview updated successfully',
+      data: updatedInterview
+    });
+    try {
+      await createAndEmit({
+        toUserId: updatedInterview?.interviewer?._id || updatedInterview?.interviewer,
+        toRole: 'recruiter',
+        type: 'interview',
+        title: 'Interview Rescheduled',
+        message: `Interview rescheduled to ${updatedInterview?.scheduledDate?.toISOString?.() || updatedInterview?.scheduledDate} at ${updatedInterview?.scheduledTime}`,
+        actionUrl: `/recruiter/interviews`,
+        entity: {
+          kind: 'interview',
+          id: interview._id
+        },
+        priority: 'low',
+        metadata: {
+          scheduledDate: updatedInterview?.scheduledDate,
+          scheduledTime: updatedInterview?.scheduledTime
+        },
+        createdBy: req.user?.id
+      });
+    } catch (e) {
+      console.warn('Failed creating notifications (reschedule):', e.message);
+    }
+  } catch (error) {
+    console.error('Update interview error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+router.patch('/:id/status', [param('id').isMongoId().withMessage('Invalid interview ID'), body('status').isIn(['confirmed', 'completed', 'cancelled', 'no_show']).withMessage('Invalid status'), body('notes').optional().isLength({
+  max: 1000
+}).withMessage('Notes must be less than 1000 characters'), body('cancellationReason').optional().isLength({
+  max: 500
+}).withMessage('Cancellation reason must be less than 500 characters')], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+    const {
+      status,
+      notes,
+      cancellationReason
+    } = req.body;
+    const recruiterJobs = await Job.find({
+      postedBy: req.user?.id || new mongoose.Types.ObjectId()
+    }).select('_id');
+    const recruiterJobIds = recruiterJobs.map(job => job._id);
+    const applications = await Application.find({
+      job: {
+        $in: recruiterJobIds
+      }
+    }).select('_id');
+    const applicationIds = applications.map(app => app._id);
+    const interview = await Interview.findOne({
+      _id: req.params.id,
+      application: {
+        $in: applicationIds
+      }
+    });
+    if (!interview) {
+      return res.status(404).json({
+        success: false,
+        message: 'Interview not found'
+      });
+    }
+    const oldStatus = interview.status;
+    interview.status = status;
+    interview.updatedAt = new Date();
+    if (notes) {
+      interview.notes = notes;
+    }
+    if (status === 'cancelled' && cancellationReason) {
+      interview.cancellationReason = cancellationReason;
+      interview.cancelledAt = new Date();
+    }
+    if (status === 'completed') {
+      interview.completedAt = new Date();
+    }
+    await interview.save();
+    if (status === 'completed') {
+      const application = await Application.findById(interview.application);
+      if (application && ['interview_scheduled', 'interview_confirmed'].includes(application.status)) {
+        application.status = INTERVIEW_PASSED;
+        application.timeline.push({
+          status: INTERVIEW_PASSED,
+          date: new Date(),
+          note: 'Interview completed',
+          updatedBy: req.user?.id || new mongoose.Types.ObjectId()
+        });
+        await application.save();
+      }
+    }
+    res.json({
+      success: true,
+      message: `Interview status updated from ${oldStatus} to ${status}`,
+      data: {
+        id: interview._id,
+        status: interview.status,
+        updatedAt: interview.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Update interview status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+router.get('/available-slots/:interviewerId', [param('interviewerId').isMongoId().withMessage('Invalid interviewer ID'), query('date').isISO8601().withMessage('Date must be a valid date'), query('duration').optional().isInt({
+  min: 15,
+  max: 480
+}).withMessage('Duration must be between 15 and 480 minutes')], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+    const {
+      interviewerId
+    } = req.params;
+    const {
+      date,
+      duration = 60
+    } = req.query;
+    const interviewer = await User.findOne({
+      _id: interviewerId,
+      role: 'recruiter'
+    });
+    if (!interviewer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Interviewer not found'
+      });
+    }
+    const existingInterviews = await Interview.find({
+      interviewer: interviewerId,
+      scheduledDate: date,
+      status: {
+        $in: ['scheduled', 'confirmed']
+      }
+    }).sort({
+      scheduledTime: 1
+    });
+    const workingHours = {
+      start: '09:00',
+      end: '17:00'
+    };
+    const slots = [];
+    let currentTime = workingHours.start;
+    while (currentTime < workingHours.end) {
+      const currentDateTime = new Date(date + 'T' + currentTime);
+      const slotEndTime = new Date(currentDateTime.getTime() + parseInt(duration) * 60000);
+      const hasConflict = existingInterviews.some(interview => {
+        const interviewStart = new Date(interview.scheduledDate + 'T' + interview.scheduledTime);
+        const interviewEnd = new Date(interviewStart.getTime() + interview.duration * 60000);
+        return currentDateTime >= interviewStart && currentDateTime < interviewEnd || slotEndTime > interviewStart && slotEndTime <= interviewEnd || currentDateTime <= interviewStart && slotEndTime >= interviewEnd;
+      });
+      if (!hasConflict && slotEndTime.getHours() < 17) {
+        slots.push({
+          startTime: currentTime,
+          endTime: slotEndTime.toTimeString().slice(0, 5),
+          available: true
+        });
+      }
+      const nextTime = new Date(currentDateTime.getTime() + 30 * 60000);
+      currentTime = nextTime.toTimeString().slice(0, 5);
+    }
+    res.json({
+      success: true,
+      data: {
+        date,
+        duration,
+        interviewerId,
+        availableSlots: slots,
+        existingInterviews: existingInterviews.length
+      }
+    });
+  } catch (error) {
+    console.error('Get available slots error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+module.exports = router;

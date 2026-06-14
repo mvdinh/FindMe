@@ -73,7 +73,7 @@ router.post('/:jobId', async (req, res) => {
     if (job.status !== 'active') {
       return res.status(400).json({
         success: false,
-        message: 'Cannot save inactive job'
+        message: 'Cannot save closed or drafted job'
       });
     }
     const user = await User.findById(req.user._id);

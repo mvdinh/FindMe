@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import ThemeToggle from '../../components/common/ThemeToggle';
-import { useNotifications } from '../../contexts/NotificationsContext';
-import { Bell, LogOut, User } from 'lucide-react';
+import NotificationDropdown from '../../components/notifications/NotificationDropdown';
+import { LogOut, User } from 'lucide-react';
 
 const findmeLogo = '/logo.png';
 
@@ -15,7 +15,6 @@ const ApplicantNavbarPanel = ({ onNavigate }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { unreadCount } = useNotifications();
 
   const navigationItems = [
     { name: 'Tổng quan', href: '/dashboard' },
@@ -90,66 +89,76 @@ const ApplicantNavbarPanel = ({ onNavigate }) => {
       </nav>
 
       <div className="shrink-0 space-y-3 border-t border-border bg-sidebar/50 p-3">
+        <div className="rounded-lg bg-primary/5 dark:bg-primary/10 p-3 border border-border space-y-1">
+          <p className="font-['Roboto'] text-[11px] text-muted-foreground font-semibold">Bạn là nhà tuyển dụng?</p>
+          <Link to="/tuyen-dung" className="font-['Open_Sans'] text-xs font-bold text-primary hover:underline flex items-center gap-1">
+            Đăng tuyển ngay &raquo;
+          </Link>
+        </div>
+
         <div className="flex items-center justify-between gap-2">
           <span className="font-['Roboto'] text-xs text-muted-foreground">Giao diện</span>
           <ThemeToggle className="shrink-0" />
         </div>
 
-        <Button variant="outline" className="relative h-auto min-h-11 w-full touch-manipulation gap-2 py-2.5 font-['Roboto']" asChild>
-          <Link to="/notifications" onClick={closeMobile}>
-            <Bell className="size-5 shrink-0" />
-            <span className="text-sm font-medium">Thông báo</span>
-            {unreadCount > 0 && (
-              <Badge className="absolute -right-1 -top-1 min-w-[18px] justify-center px-1 text-[10px]" variant="default">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </Badge>
-            )}
-          </Link>
-        </Button>
+        <div className="w-full">
+          <NotificationDropdown isSidebar={true} />
+        </div>
 
-        <Link
-          to="/profile"
-          onClick={closeMobile}
-          className={cn(
-            'flex w-full items-center gap-3 rounded-lg border-2 px-2 py-2 text-left transition-all',
-            profileActive
-              ? 'border-primary/50 bg-sidebar-accent'
-              : 'border-transparent hover:border-border'
-          )}
-        >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted ring-1 ring-border">
-            {user?.profilePicture || user?.avatar ? (
-              <img
-                src={user.profilePicture || user.avatar}
-                alt=""
-                className="h-full w-full object-cover"
-                onError={e => {
-                  e.target.style.display = 'none';
-                  if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className="flex h-full w-full items-center justify-center"
-              style={{ display: user?.profilePicture || user?.avatar ? 'none' : 'flex' }}
-            >
-              {user?.firstName && user?.lastName ? (
-                <span className="font-['Roboto'] text-xs font-bold uppercase text-primary">
-                  {user.firstName.charAt(0)}
-                  {user.lastName.charAt(0)}
-                </span>
-              ) : (
-                <User className="size-5 text-muted-foreground" />
-              )}
+        <div className={cn(
+          'flex w-full items-center justify-between gap-2 rounded-lg border-2 px-2 py-2 text-left transition-all',
+          profileActive
+            ? 'border-primary/50 bg-sidebar-accent'
+            : 'border-transparent hover:border-border'
+        )}>
+          <Link
+            to="/profile"
+            onClick={closeMobile}
+            className="flex items-center gap-3 min-w-0 flex-1"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted ring-1 ring-border">
+              {user?.profilePicture || user?.avatar ? (
+                <img
+                  src={user.profilePicture || user.avatar}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  onError={e => {
+                    e.target.style.display = 'none';
+                    if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div
+                className="flex h-full w-full items-center justify-center"
+                style={{ display: user?.profilePicture || user?.avatar ? 'none' : 'flex' }}
+              >
+                {user?.firstName && user?.lastName ? (
+                  <span className="font-['Roboto'] text-xs font-bold uppercase text-primary">
+                    {user.firstName.charAt(0)}
+                    {user.lastName.charAt(0)}
+                  </span>
+                ) : (
+                  <User className="size-5 text-muted-foreground" />
+                )}
+              </div>
             </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-['Open_Sans'] text-sm font-semibold text-foreground leading-tight">
+                {user?.firstName && user?.lastName ? `${user.lastName} ${user.firstName}` : 'Ứng viên'}
+              </p>
+              <p className="truncate font-['Roboto'] text-[10px] text-muted-foreground mt-0.5">{user?.email || 'Chưa có thư điện tử'}</p>
+            </div>
+          </Link>
+          <div className="shrink-0">
+            <Link
+              to="/tuyen-dung"
+              onClick={closeMobile}
+              className="text-[10px] font-bold text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border border-red-200 dark:border-red-800 rounded px-1.5 py-1 hover:bg-red-50 dark:hover:bg-red-950 transition-colors whitespace-nowrap block"
+            >
+              Bạn là nhà tuyển dụng?
+            </Link>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-['Open_Sans'] text-sm font-semibold text-foreground">
-              {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Ứng viên'}
-            </p>
-            <p className="truncate font-['Roboto'] text-[11px] text-muted-foreground">{user?.email || 'Chưa có thư điện tử'}</p>
-          </div>
-        </Link>
+        </div>
 
         <Separator />
 

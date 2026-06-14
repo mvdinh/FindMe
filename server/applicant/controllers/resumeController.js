@@ -18,6 +18,11 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024
   }
 });
+/**
+ * API Endpoint: Upload hồ sơ CV của ứng viên.
+ * - Hỗ trợ giới hạn file 5MB, nhận định dạng PDF hoặc DOCX.
+ * - Đẩy file lên Cloudinary, xóa các file CV cũ của ứng viên đó trong hệ thống và cập nhật link CV mới vào Profile.
+ */
 const uploadResume = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -105,9 +110,16 @@ const uploadResume = async (req, res) => {
     });
   }
 };
+/**
+ * Hàm phụ trợ: Lấy đuôi mở rộng của tên file (vd: .pdf, .docx).
+ */
 function getFileExtension(filename) {
   return filename.substring(filename.lastIndexOf('.'));
 }
+/**
+ * API Endpoint: Lưu kết quả phân tích CV (được AI bóc tách).
+ * Cập nhật các trường như: họ tên, số điện thoại, kỹ năng, kinh nghiệm, học vấn vào Profile của ứng viên.
+ */
 const saveParsedResumeData = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -157,6 +169,9 @@ const saveParsedResumeData = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Lấy danh sách tất cả các CV đã upload của một người dùng.
+ */
 const getUserResumes = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -174,6 +189,9 @@ const getUserResumes = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Lấy thông tin chi tiết một CV cụ thể dựa theo ID.
+ */
 const getResume = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -202,6 +220,10 @@ const getResume = async (req, res) => {
   }
 };
 
+/**
+ * API Endpoint: Lấy URL tải xuống/xem trực tiếp của file CV (lưu trên Cloudinary).
+ * - Có hỗ trợ refresh URL lấy lại từ Cloudinary nếu link cũ bị hỏng.
+ */
 const getResumeFileUrl = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -242,6 +264,10 @@ const getResumeFileUrl = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Xóa (Vô hiệu hóa) một file CV.
+ * Đánh dấu file là ngưng hoạt động (deactivate) và gỡ link CV khỏi Profile hiện tại.
+ */
 const deleteResume = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -277,6 +303,10 @@ const deleteResume = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Tải xuống file CV.
+ * Trả về dưới dạng file nhị phân đính kèm (attachment) để trình duyệt hiển thị hộp thoại Tải xuống.
+ */
 const downloadResume = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -316,6 +346,10 @@ const downloadResume = async (req, res) => {
   }
 };
 
+/**
+ * API Endpoint: Xem trước (Preview) file CV trực tiếp trên trình duyệt.
+ * Stream nội dung PDF về trình duyệt dạng inline (không tải xuống) bằng cách fetch từ Cloudinary.
+ */
 const previewResume = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;

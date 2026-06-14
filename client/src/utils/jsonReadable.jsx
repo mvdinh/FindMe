@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDateTimeVN } from '../hr/hrDateFormat';
+import { formatDateTimeVN } from "@/utils/dateFormat";
 
 const KEY_LABELS = {
   jobId: 'Mã tin tuyển dụng',

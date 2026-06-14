@@ -26,7 +26,7 @@ const jobSchema = new mongoose.Schema({
   },
   jobType: {
     type: String,
-    enum: ['Full-time', 'Part-time', 'Internship', 'Contract', 'Freelance', 'Temporary', 'Toàn thời gian', 'Bán thời gian', 'Thực tập', 'Hợp đồng', 'Tự do', 'Thời vụ'],
+    enum: ['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance'],
     required: [true, 'Job type is required']
   },
   location: {
@@ -35,8 +35,8 @@ const jobSchema = new mongoose.Schema({
   },
   locationType: {
     type: String,
-    enum: ['onsite', 'remote', 'hybrid'],
-    default: 'onsite'
+    enum: ['Onsite', 'Remote', 'Hybrid'],
+    default: 'Onsite'
   },
   salaryRange: {
     min: {
@@ -66,6 +66,7 @@ const jobSchema = new mongoose.Schema({
   },
   experienceLevel: {
     type: String,
+    enum: ['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director'],
     required: [true, 'Experience level is required']
   },
   requiredSkills: {
@@ -100,7 +101,7 @@ const jobSchema = new mongoose.Schema({
   atsEngine: {
     type: String,
     enum: ['gemini', 'scan_cv'],
-    default: 'gemini'
+    default: 'scan_cv'
   },
   resumeRequired: {
     type: Boolean,
@@ -113,6 +114,10 @@ const jobSchema = new mongoose.Schema({
   defaultInterviewer: {
     type: String
   },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company'
+  },
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -120,7 +125,7 @@ const jobSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'active', 'inactive', 'closed'],
+    enum: ['draft', 'active', 'closed'],
     default: 'draft'
   },
   views: {
@@ -140,7 +145,7 @@ jobSchema.add({
   },
   lastStatusActorRole: {
     type: String,
-    enum: ['admin', 'hr']
+    enum: ['admin', 'recruiter']
   }
 });
 jobSchema.index({

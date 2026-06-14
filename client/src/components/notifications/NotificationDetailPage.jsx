@@ -13,11 +13,11 @@ import {
   UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { HR_PAGE } from '../../hr/hrLayoutClasses';
+import { HR_PAGE } from '../../recruiter/recruiterLayoutClasses';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import { buildApiUrl } from '../../utils/api';
-import { formatDateTimeVN } from '../../hr/hrDateFormat';
+import { formatDateTimeVN } from "@/utils/dateFormat";
 import { cn } from '@/lib/utils';
 
 const TYPE_LABELS = {
@@ -163,6 +163,15 @@ const NotificationDetailPage = ({ Layout, listPath }) => {
                   <p className="whitespace-pre-wrap pt-1 font-['Roboto'] text-[15px] leading-relaxed text-foreground/90 sm:text-base">
                     {notif.message}
                   </p>
+                  {(notif.actionUrl || notif.link) && (
+                    <div className="pt-4 pb-2">
+                      <Button asChild>
+                        <Link to={notif.actionUrl || notif.link}>
+                          Xử lý ngay
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

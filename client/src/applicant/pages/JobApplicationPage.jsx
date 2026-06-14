@@ -6,7 +6,7 @@ import { HR_INPUT, HR_TEXTAREA, HR_INPUT_ROUNDED_L } from '../applicantFormClass
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { getRecruitmentCode } from '../../utils/recruitmentCode';
-import { formatDateVN } from '../applicantDateFormat';
+import { formatDateVN } from "@/utils/dateFormat";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -265,6 +265,16 @@ const JobApplicationPage = () => {
       return;
     }
     setIsSubmitting(true);
+    
+    // Optimistic UI: Navigate and toast immediately
+    navigate('/jobs');
+    window.setTimeout(() => {
+      toast.info(
+        'Đơn đang được gửi đi. Hệ thống sẽ phân loại CV trong nền — bạn có thể xem tiến độ tại mục Đơn ứng tuyển.',
+        { duration: 6500 }
+      );
+    }, 350);
+
     try {
       const submitData = new FormData();
       submitData.append('jobId', jobId);
@@ -279,32 +289,23 @@ const JobApplicationPage = () => {
       if (!useProfileResume && customResumeFile) {
         submitData.append('customResume', customResumeFile);
       }
-      const response = await apiRequest('/api/applicant/applications', {
+      
+      // Send request in background
+      apiRequest('/api/applicant/applications', {
         method: 'POST',
         body: submitData,
         headers: {}
-      });
-      if (response.ok) {
-        const result = await response.json();
-        if (result && result.application && result.application._id) {
-          navigate('/');
-          window.setTimeout(() => {
-            toast.info(
-              'Đơn đã gửi. Hệ thống đang phân loại CV trong nền — bạn có thể xem tiến độ tại mục Đơn ứng tuyển.',
-              { duration: 6500 }
-            );
-          }, 350);
-          return;
+      }).then(async response => {
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Background application submission error:', errorText);
+          toast.error('Có lỗi xảy ra khi nộp đơn: ' + errorText);
         }
-        console.error('Application not saved. Please try again.');
-      } else {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Error submitting application.');
-      }
+      }).catch(err => {
+        console.error('Background application submission exception:', err);
+      });
     } catch (error) {
       console.error('Application submission error:', error.message || 'An unexpected error occurred.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
   const JobApplicationSkeleton = () => (

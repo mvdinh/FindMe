@@ -25,7 +25,7 @@ const applicationSchema = new mongoose.Schema({
       type: String,
       default: ''
     },
-    hrNote: {
+    recruiterNote: {
       type: String,
       default: ''
     },
@@ -287,7 +287,7 @@ applicationSchema.virtual('daysOld').get(function () {
   return diffDays;
 });
 applicationSchema.virtual('applicantFullName').get(function () {
-  return `${this.personalInfo.firstName} ${this.personalInfo.lastName}`;
+  return `${this.personalInfo.lastName} ${this.personalInfo.firstName}`;
 });
 applicationSchema.pre('save', function (next) {
   if (this.isModified('status') && !this.isNew) {

@@ -17,6 +17,8 @@ const {
 } = require('../../global/utils/applicationCode');
 
 const router = express.Router();
+
+// CV được lưu vào hàng chờ
 router.post('/', auth, authorize('applicant'), uploadResumeMemory.single('resume'), [body('jobId').isMongoId().withMessage('Valid job ID is required'), body('firstName').trim().notEmpty().withMessage('First name is required'), body('lastName').trim().notEmpty().withMessage('Last name is required'), body('email').isEmail().normalizeEmail().withMessage('Valid email is required'), body('phone').trim().notEmpty().withMessage('Phone number is required'), body('coverLetter').optional().trim().isLength({
   max: 2000
 }).withMessage('Cover letter too long')], async (req, res) => {

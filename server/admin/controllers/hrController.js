@@ -5,6 +5,13 @@ const Application = require('../../global/models/Application');
 const {
   createAndEmit
 } = require('../../global/services/notificationService');
+/**
+ * Hàm phụ trợ: Đếm số lượng hồ sơ ứng tuyển theo một trạng thái nhất định, 
+ * được gom nhóm theo từng nhân viên HR đã đăng tin tuyển dụng.
+ * @param {Array<ObjectId>} hrIds - Mảng ID của các nhân sự HR
+ * @param {string} applicationStatus - Trạng thái hồ sơ cần đếm (VD: 'interview_scheduled')
+ * @returns {Object} Object với key là hrId và value là số lượng đếm được.
+ */
 async function countAppsByHrAndStatus(hrIds, applicationStatus) {
   if (!hrIds.length) return {};
   const rows = await Application.aggregate([{
@@ -39,6 +46,12 @@ async function countAppsByHrAndStatus(hrIds, applicationStatus) {
     return acc;
   }, {});
 }
+/**
+ * API Endpoint: Lấy danh sách toàn bộ người dùng có quyền HR (kèm phân trang).
+ * - Trả về chi tiết tài khoản HR.
+ * - Lấy tổng số lượng tin tuyển dụng mỗi HR đã đăng.
+ * - Thống kê số lượng ứng viên đã xếp lịch phỏng vấn và đã đậu phỏng vấn của từng HR.
+ */
 const getAllHRUsers = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -84,7 +97,7 @@ const getAllHRUsers = async (req, res) => {
       const idStr = hr._id.toString();
       return {
         id: hr._id,
-        name: `${hr.firstName} ${hr.lastName}`.trim() || 'N/A',
+        name: `${hr.lastName} ${hr.firstName}`.trim() || 'N/A',
         email: hr.email,
         department: hr.department || 'N/A',
         dateJoined: hr.joiningDate ? hr.joiningDate.toISOString().split('T')[0] : new Date(hr.createdAt).toISOString().split('T')[0],
@@ -143,6 +156,12 @@ const getAllHRUsers = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Quản trị viên (Admin) tạo một tài khoản nhân sự HR mới.
+ * - Kiểm tra trùng lặp email.
+ * - Mã hóa (hash) mật khẩu trước khi lưu.
+ * - Tạo hồ sơ User với role='hr' và bắn thông báo (notification) chào mừng trong hệ thống.
+ */
 const createHRUser = async (req, res) => {
   try {
     const {
@@ -196,9 +215,9 @@ const createHRUser = async (req, res) => {
         },
         priority: 'high',
         metadata: {
-          userName: `${savedUser.firstName} ${savedUser.lastName}`,
+          userName: `${savedUser.lastName} ${savedUser.firstName}`,
           department: savedUser.department,
-          createdBy: `${req.user.firstName} ${req.user.lastName}`
+          createdBy: `${req.user.lastName} ${req.user.firstName}`
         },
         createdBy: req.user._id
       });
@@ -207,7 +226,7 @@ const createHRUser = async (req, res) => {
     }
     const responseData = {
       id: savedUser._id,
-      name: `${savedUser.firstName} ${savedUser.lastName}`.trim(),
+      name: `${savedUser.lastName} ${savedUser.firstName}`.trim(),
       email: savedUser.email,
       department: savedUser.department,
       dateJoined: savedUser.joiningDate.toISOString().split('T')[0],
@@ -242,6 +261,10 @@ const createHRUser = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Cập nhật thông tin (họ tên, phòng ban) của một nhân viên HR cụ thể.
+ * @param {string} req.params.hrId - ID của nhân viên HR cần cập nhật.
+ */
 const updateHRUser = async (req, res) => {
   try {
     const {
@@ -280,7 +303,7 @@ const updateHRUser = async (req, res) => {
     }
     const responseData = {
       id: updatedUser._id,
-      name: `${updatedUser.firstName} ${updatedUser.lastName}`.trim(),
+      name: `${updatedUser.lastName} ${updatedUser.firstName}`.trim(),
       email: updatedUser.email,
       department: updatedUser.department,
       dateJoined: updatedUser.joiningDate ? updatedUser.joiningDate.toISOString().split('T')[0] : new Date(updatedUser.createdAt).toISOString().split('T')[0],
@@ -315,6 +338,10 @@ const updateHRUser = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Xóa vĩnh viễn tài khoản của một nhân viên HR khỏi hệ thống.
+ * @param {string} req.params.hrId - ID của nhân viên HR cần xóa.
+ */
 const deleteHRUser = async (req, res) => {
   try {
     const {
@@ -333,7 +360,7 @@ const deleteHRUser = async (req, res) => {
       message: 'HR user deleted successfully',
       deletedHR: {
         id: deletedUser._id,
-        name: `${deletedUser.firstName} ${deletedUser.lastName}`.trim(),
+        name: `${deletedUser.lastName} ${deletedUser.firstName}`.trim(),
         email: deletedUser.email
       }
     });
@@ -345,6 +372,10 @@ const deleteHRUser = async (req, res) => {
     });
   }
 };
+/**
+ * API Endpoint: Kích hoạt (Active) hoặc Vô hiệu hóa (Deactivate) tài khoản HR.
+ * Khi bị vô hiệu hóa, tài khoản HR đó sẽ không thể đăng nhập hoặc thao tác trên hệ thống.
+ */
 const toggleHRUserStatus = async (req, res) => {
   try {
     const {
@@ -378,7 +409,7 @@ const toggleHRUserStatus = async (req, res) => {
     const pid = updatedUser._id.toString();
     const responseData = {
       id: updatedUser._id,
-      name: `${updatedUser.firstName} ${updatedUser.lastName}`.trim(),
+      name: `${updatedUser.lastName} ${updatedUser.firstName}`.trim(),
       email: updatedUser.email,
       phone: updatedUser.phone,
       department: updatedUser.department,

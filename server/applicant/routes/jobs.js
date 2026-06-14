@@ -11,7 +11,7 @@ const {
   authorize
 } = require('../../global/middleware/auth');
 const router = express.Router();
-router.get('/', [query('search').optional().trim(), query('workType').optional().isIn(['remote', 'hybrid', 'onsite']), query('jobType').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance']), query('experienceLevel').optional().trim(), query('location').optional().trim(), query('minSalary').optional().isNumeric(), query('maxSalary').optional().isNumeric(), query('page').optional().isInt({
+router.get('/', [query('search').optional().trim(), query('workType').optional().isIn(['Remote', 'Hybrid', 'Onsite']), query('jobType').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance']), query('experienceLevel').optional().isIn(['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director']), query('location').optional().trim(), query('minSalary').optional().isNumeric(), query('maxSalary').optional().isNumeric(), query('page').optional().isInt({
   min: 1
 }), query('limit').optional().isInt({
   min: 1,
@@ -49,7 +49,7 @@ router.get('/', [query('search').optional().trim(), query('workType').optional()
     }
     if (workType) query.locationType = workType;
     if (jobType) query.jobType = jobType;
-    if (experienceLevel) query.experienceLevel = new RegExp(experienceLevel, 'i');
+    if (experienceLevel) query.experienceLevel = experienceLevel;
     if (location) query.location = new RegExp(location, 'i');
     if (minSalary || maxSalary) {
       query.$and = [];
@@ -89,7 +89,7 @@ router.get('/', [query('search').optional().trim(), query('workType').optional()
     } else {
       sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
     }
-    const jobs = await Job.find(query).populate('postedBy', 'firstName lastName email').sort(sortOptions).skip(skip).limit(parseInt(limit)).lean();
+    const jobs = await Job.find(query).populate('postedBy', 'firstName lastName email').populate('company').sort(sortOptions).skip(skip).limit(parseInt(limit)).lean();
     const transformedJobs = jobs.map(job => {
       const daysSincePosted = Math.ceil((new Date() - new Date(job.createdAt)) / (1000 * 60 * 60 * 24));
       let postedDate;
@@ -103,7 +103,8 @@ router.get('/', [query('search').optional().trim(), query('workType').optional()
       return {
         id: job._id,
         title: job.title,
-        company: 'FindMe',
+        company: job.company?.name || 'FindMe',
+        companyDetails: job.company || null,
         postedDate,
         location: job.location || 'Not specified',
         country: 'Not specified',
@@ -136,7 +137,7 @@ router.get('/', [query('search').optional().trim(), query('workType').optional()
         preferredSkills: job.preferredSkills || [],
         qualification: job.qualification || [],
         applicationDeadline: job.applicationDeadline,
-        companyLogo: null
+        companyLogo: job.company?.logo || null
       };
     });
     const totalJobs = await Job.countDocuments(query);
@@ -167,7 +168,7 @@ router.get('/', [query('search').optional().trim(), query('workType').optional()
 });
 router.get('/:id', async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id).populate('postedBy', 'firstName lastName email').lean();
+    const job = await Job.findById(req.params.id).populate('postedBy', 'firstName lastName email').populate('company').lean();
     if (!job) {
       return res.status(404).json({
         success: false,
@@ -200,8 +201,9 @@ router.get('/:id', async (req, res) => {
       description: job.description,
       requirements: job.requirements || '',
       benefits: job.benefits || '',
-      company: 'FindMe',
-      companyDetails: null,
+      company: job.company?.name || 'FindMe',
+      companyDetails: job.company || null,
+      companyLogo: job.company?.logo || null,
       postedDate,
       location: job.location || 'Not specified',
       country: 'Not specified',
@@ -272,7 +274,7 @@ router.get('/:id', async (req, res) => {
     });
   }
 });
-router.post('/', auth, authorize('hr', 'admin'), [body('title').trim().notEmpty().withMessage('Job title is required'), body('description').trim().notEmpty().withMessage('Job description is required'), body('company').trim().notEmpty().withMessage('Company name is required'), body('location').trim().notEmpty().withMessage('Location is required'), body('country').trim().notEmpty().withMessage('Country is required'), body('workType').isIn(['remote', 'hybrid', 'on-site']).withMessage('Invalid work type'), body('jobType').isIn(['full-time', 'part-time', 'contract', 'internship']).withMessage('Invalid job type'), body('experienceLevel').isIn(['entry', 'mid', 'senior', 'lead']).withMessage('Invalid experience level'), body('salary.min').isNumeric().withMessage('Minimum salary must be a number'), body('salary.max').isNumeric().withMessage('Maximum salary must be a number'), body('requirements').isArray().withMessage('Requirements must be an array'), body('skills').isArray().withMessage('Skills must be an array')], async (req, res) => {
+router.post('/', auth, authorize('hr', 'admin'), [body('title').trim().notEmpty().withMessage('Job title is required'), body('description').trim().notEmpty().withMessage('Job description is required'), body('company').trim().notEmpty().withMessage('Company name is required'), body('location').trim().notEmpty().withMessage('Location is required'), body('country').trim().notEmpty().withMessage('Country is required'), body('workType').isIn(['Remote', 'Hybrid', 'Onsite']).withMessage('Invalid work type'), body('jobType').isIn(['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance']).withMessage('Invalid job type'), body('experienceLevel').isIn(['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director']).withMessage('Invalid experience level'), body('salary.min').isNumeric().withMessage('Minimum salary must be a number'), body('salary.max').isNumeric().withMessage('Maximum salary must be a number'), body('requirements').isArray().withMessage('Requirements must be an array'), body('skills').isArray().withMessage('Skills must be an array')], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

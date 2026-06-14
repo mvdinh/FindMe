@@ -2,6 +2,13 @@ const mongoose = require('mongoose');
 const User = require('../../global/models/User');
 const Job = require('../../global/models/Job');
 const Application = require('../../global/models/Application');
+/**
+ * Hàm phụ trợ: Kiểm tra xem Admin hiện tại có quyền quản lý tài khoản đích hay không.
+ * Đảm bảo Admin không tự chỉnh sửa hoặc khóa tài khoản Admin khác thông qua API này.
+ * @param {Object} adminUser - Đối tượng User của Admin đang thực hiện thao tác.
+ * @param {string} targetId - ID của User đích.
+ * @returns {Object|null} Trả về đối tượng User đích nếu hợp lệ, ngược lại trả về null.
+ */
 async function assertCanManageUser(adminUser, targetId) {
   if (!mongoose.Types.ObjectId.isValid(targetId)) return null;
   const target = await User.findById(targetId);
@@ -10,6 +17,10 @@ async function assertCanManageUser(adminUser, targetId) {
   return target;
 }
 
+/**
+ * Hàm phụ trợ: Lọc và định dạng lại các trường thông tin của một User
+ * để trả về cho giao diện danh sách bảng (Table) một cách gọn nhẹ.
+ */
 function formatUserRow(u) {
   return {
     id: u._id,
@@ -27,6 +38,11 @@ function formatUserRow(u) {
   };
 }
 
+/**
+ * API Endpoint: Lấy danh sách tài khoản (Users) trên hệ thống (dành cho Admin).
+ * - Phân trang, tìm kiếm theo tên/email/sđt.
+ * - Lọc theo vai trò (HR, Applicant) và trạng thái tài khoản (Active, Inactive).
+ */
 const listUsers = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -89,6 +105,11 @@ const listUsers = async (req, res) => {
   }
 };
 
+/**
+ * API Endpoint: Lấy chi tiết thông tin của một User bất kỳ dựa vào ID.
+ * - Kiểm tra quyền bằng assertCanManageUser.
+ * - Không trả về password hay lịch sử đăng nhập nhạy cảm.
+ */
 const getUserById = async (req, res) => {
   try {
     const target = await assertCanManageUser(req.user, req.params.id);
@@ -130,6 +151,11 @@ const getUserById = async (req, res) => {
   }
 };
 
+/**
+ * API Endpoint: Cập nhật thông tin/trạng thái tài khoản của một User.
+ * - Hiện tại chỉ cho phép Admin thay đổi trạng thái kích hoạt (isActive) để khóa/mở khóa tài khoản.
+ * - Chặn không cho phép Admin tự khóa tài khoản của chính mình.
+ */
 const updateUser = async (req, res) => {
   try {
     const target = await assertCanManageUser(req.user, req.params.id);

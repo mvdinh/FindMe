@@ -85,9 +85,9 @@ function normalizeSalaryRange(range) {
 function normalizeJobPayload(payload = {}) {
   const normalized = { ...payload };
   if (normalized.department) normalized.department = toVietnameseText(normalized.department);
-  if (normalized.jobType) normalized.jobType = normalizeJobType(normalized.jobType);
-  if (normalized.experienceLevel) normalized.experienceLevel = toVietnameseText(normalized.experienceLevel);
-  if (normalized.locationType) normalized.locationType = normalized.locationType.toLowerCase();
+  if (normalized.locationType) {
+    normalized.locationType = normalized.locationType.charAt(0).toUpperCase() + normalized.locationType.slice(1).toLowerCase();
+  }
   if (normalized.salaryRange) normalized.salaryRange = normalizeSalaryRange(normalized.salaryRange);
   if (normalized.qualification) normalized.qualification = normalizeStringArray(normalized.qualification);
   if (normalized.defaultInterviewRounds) normalized.defaultInterviewRounds = normalizeStringArray(normalized.defaultInterviewRounds);

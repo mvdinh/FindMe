@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 const Job = require('../../global/models/Job');
 const Application = require('../../global/models/Application');
 const User = require('../../global/models/User');
+/**
+ * Hàm phụ trợ: Trả về mảng N tháng gần nhất theo định dạng "YYYY-MM".
+ * Dùng để tạo trục hoành (trục X) cho các biểu đồ thống kê theo tháng.
+ * @param {number} n - Số lượng tháng cần lấy
+ * @returns {Array<string>} Mảng chứa các tháng (VD: ['2026-01', '2026-02'])
+ */
 function getLastMonths(n) {
   const out = [];
   const d = new Date();
@@ -14,6 +20,12 @@ function getLastMonths(n) {
   }
   return out;
 }
+/**
+ * API Endpoint: Lấy dữ liệu tổng quan (Overview) cho Admin Dashboard.
+ * - Thống kê tổng số lượng việc làm, ứng viên, nhân sự HR.
+ * - Gom nhóm và đếm số lượng hồ sơ ứng tuyển theo từng tháng (trend).
+ * - Lấy danh sách 5 hoạt động gần nhất (tin tuyển dụng mới, cập nhật trạng thái hồ sơ, HR mới).
+ */
 exports.getOverview = async (req, res) => {
   try {
     const months = Math.min(Math.max(parseInt(req.query.months) || 6, 1), 24);
@@ -150,7 +162,7 @@ exports.getOverview = async (req, res) => {
       time: a.updatedAt || a.createdAt
     })), ...recentNewUsers.map(u => ({
       type: 'hr_added',
-      message: `HR mới: ${u.firstName} ${u.lastName}`.trim(),
+      message: `HR mới: ${u.lastName} ${u.firstName}`.trim(),
       time: u.createdAt
     }))].sort((a, b) => b.time - a.time).slice(0, 12);
     const interviewScheduledCandidates = await Application.countDocuments({

@@ -24,18 +24,20 @@ const resumeRoutes = require('./applicant/routes/resumes');
 const applicantProfileRoutes = require('./applicant/routes/profile');
 const savedJobsRoutes = require('./applicant/routes/saved-jobs');
 const applicantApplicationRoutes = require('./applicant/routes/applicantApplications');
-const hrDashboardRoutes = require('./hr/routes/dashboard');
-const hrJobRoutes = require('./hr/routes/jobs');
-const hrApplicationRoutes = require('./hr/routes/applications');
-const hrInterviewsRoutes = require('./hr/routes/interviews');
-const hrInterviewersRoutes = require('./hr/routes/interviewers');
-const adminHRRoutes = require('./admin/routes/hr');
+const recruiterDashboardRoutes = require('./recruiter/routes/dashboard');
+const recruiterJobRoutes = require('./recruiter/routes/jobs');
+const recruiterApplicationRoutes = require('./recruiter/routes/applications');
+const recruiterInterviewsRoutes = require('./recruiter/routes/interviews');
+const recruiterInterviewersRoutes = require('./recruiter/routes/interviewers');
+const adminRecruiterRoutes = require('./admin/routes/recruiter');
 const adminJobsRoutes = require('./admin/routes/jobs');
 const adminJobStatusRequestsRoutes = require('./admin/routes/jobStatusRequests');
 const adminDashboardRoutes = require('./admin/routes/dashboard');
 const adminUsersRoutes = require('./admin/routes/users');
-const hrJobStatusRequestsRoutes = require('./hr/routes/jobStatusRequests');
-const hrProfileRoutes = require('./hr/routes/profile');
+const adminCompaniesRoutes = require('./admin/routes/companies');
+const recruiterJobStatusRequestsRoutes = require('./recruiter/routes/jobStatusRequests');
+const recruiterProfileRoutes = require('./recruiter/routes/profile');
+const companyRoutes = require('./global/routes/companies');
 const { startApplicationAiCron } = require('./global/jobs/applicationAiCron');
 const app = express();
 const server = http.createServer(app);
@@ -117,7 +119,7 @@ if (IS_PROD) {
     skip: skipPreflight,
     handler: rateLimitHandler
   }));
-  app.use(['/api/applications', '/api/hr', '/api/admin', '/api/applicant'], rateLimit({
+  app.use(['/api/applications', '/api/recruiter', '/api/admin', '/api/applicant'], rateLimit({
     windowMs: WINDOW,
     max: MUTATION_MAX,
     standardHeaders: true,
@@ -144,23 +146,25 @@ app.use('/api', (req, res, next) => {
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/companies', companyRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/applicant/profile', applicantProfileRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/applicant/saved-jobs', savedJobsRoutes);
 app.use('/api/applicant/applications', applicantApplicationRoutes);
-app.use('/api/hr/dashboard', hrDashboardRoutes);
-app.use('/api/hr/jobs', hrJobRoutes);
-app.use('/api/hr/job-status-requests', hrJobStatusRequestsRoutes);
-app.use('/api/hr/applications', hrApplicationRoutes);
-app.use('/api/hr/interviews', hrInterviewsRoutes);
-app.use('/api/hr/interviewers', hrInterviewersRoutes);
-app.use('/api/hr/profile', hrProfileRoutes);
-app.use('/api/admin/hr', adminHRRoutes);
+app.use('/api/recruiter/dashboard', recruiterDashboardRoutes);
+app.use('/api/recruiter/jobs', recruiterJobRoutes);
+app.use('/api/recruiter/job-status-requests', recruiterJobStatusRequestsRoutes);
+app.use('/api/recruiter/applications', recruiterApplicationRoutes);
+app.use('/api/recruiter/interviews', recruiterInterviewsRoutes);
+app.use('/api/recruiter/interviewers', recruiterInterviewersRoutes);
+app.use('/api/recruiter/profile', recruiterProfileRoutes);
+app.use('/api/admin/recruiter', adminRecruiterRoutes);
 app.use('/api/admin/jobs', adminJobsRoutes);
 app.use('/api/admin/job-status-requests', adminJobStatusRequestsRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/admin/users', adminUsersRoutes);
+app.use('/api/admin/companies', adminCompaniesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.get('/api/health', (req, res) => {
   const dbState = mongoose.connection?.readyState || 0;

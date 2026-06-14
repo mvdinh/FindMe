@@ -9,6 +9,9 @@ const User = require('../models/User');
 const {
   sendPasswordResetEmail
 } = require('../services/emailService');
+/**
+ * Hàm phụ trợ: Lấy cấu hình cho OTP đặt lại mật khẩu từ biến môi trường.
+ */
 function otpConfig() {
   return {
     expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10),
@@ -17,10 +20,19 @@ function otpConfig() {
     maxResends: parseInt(process.env.OTP_MAX_RESENDS || '10', 10)
   };
 }
+/**
+ * Hàm phụ trợ: Sinh ngẫu nhiên một mã OTP gồm 6 chữ số.
+ */
 function generateCode() {
   const num = crypto.randomInt(0, 1000000);
   return num.toString().padStart(6, '0');
 }
+/**
+ * API Endpoint: Gửi mã OTP xác thực tới email để quên mật khẩu.
+ * - Kiểm tra giới hạn số lần yêu cầu OTP (rate limiting) và thời gian chờ (cooldown).
+ * - Sinh mã OTP mới, băm (hash) và lưu vào database.
+ * - Trả về mã thành công ngay cả khi email không tồn tại để tránh lộ lọt email (security best practice).
+ */
 async function sendPasswordResetOtp(req, res) {
   try {
     const errors = validationResult(req);
@@ -108,6 +120,10 @@ async function sendPasswordResetOtp(req, res) {
   }
 }
 
+/**
+ * Hàm phụ trợ: Sinh ra một JWT Token ngắn hạn (10 phút) dùng làm phiên (session) đặt lại mật khẩu.
+ * Token này chỉ được cấp khi người dùng đã nhập ĐÚNG mã OTP.
+ */
 function signPasswordResetSession({
   email,
   tokenId
@@ -125,6 +141,9 @@ function signPasswordResetSession({
   });
 }
 
+/**
+ * Hàm phụ trợ: Xác thực JWT Token phiên đặt lại mật khẩu xem có hợp lệ hay không.
+ */
 function verifyPasswordResetSession(resetToken) {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
@@ -139,6 +158,11 @@ function verifyPasswordResetSession(resetToken) {
   return payload;
 }
 
+/**
+ * API Endpoint: Xác minh mã OTP quên mật khẩu do người dùng nhập.
+ * - Nếu mã hợp lệ, hệ thống sẽ cấp một `resetToken` (JWT 10 phút) thay vì cho phép đổi mật khẩu ngay lập tức.
+ * - Token này sẽ được chuyển sang bước Đặt lại mật khẩu cuối cùng.
+ */
 async function verifyPasswordResetCode(req, res) {
   try {
     const errors = validationResult(req);
@@ -217,6 +241,11 @@ async function verifyPasswordResetCode(req, res) {
   }
 }
 
+/**
+ * API Endpoint: Đặt lại mật khẩu mới.
+ * - Chấp nhận 2 cách xác thực: dùng mã OTP trực tiếp (code) HOẶC dùng token phiên bản (resetToken).
+ * - Mã hóa (hash) mật khẩu mới và lưu vào cơ sở dữ liệu.
+ */
 async function resetPasswordWithOtp(req, res) {
   try {
     const errors = validationResult(req);

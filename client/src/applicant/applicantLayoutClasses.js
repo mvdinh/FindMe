@@ -8,4 +8,4 @@ export {
   HR_H1,
   HR_SUBTITLE,
   HR_TABLE_WRAP
-} from '../hr/hrLayoutClasses';
+} from '../recruiter/recruiterLayoutClasses';

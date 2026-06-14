@@ -18,6 +18,9 @@ const pendingRegistrationSchema = new mongoose.Schema({
     password: String,
     phone: String,
     role: String,
+    companyName: String,
+    companyAddress: String,
+    jobTitle: String,
     profile: {
       fullName: String,
       currentLocation: String,

@@ -28,10 +28,18 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['applicant', 'hr', 'admin'],
+    enum: ['applicant', 'recruiter', 'admin'],
     default: 'applicant'
   },
   phone: {
+    type: String,
+    trim: true
+  },
+  companyName: {
+    type: String,
+    trim: true
+  },
+  companyAddress: {
     type: String,
     trim: true
   },
@@ -397,10 +405,10 @@ userSchema.index({
   accountStatus: 1
 });
 userSchema.virtual('fullName').get(function () {
-  return `${this.firstName} ${this.lastName}`;
+  return `${this.lastName} ${this.firstName}`;
 });
 userSchema.virtual('isCompanyUser').get(function () {
-  return this.role === 'hr';
+  return this.role === 'recruiter';
 });
 userSchema.statics.findActiveUsers = function (role = null) {
   const query = {
@@ -412,8 +420,8 @@ userSchema.statics.findActiveUsers = function (role = null) {
 userSchema.methods.isAdmin = function () {
   return this.role === 'admin';
 };
-userSchema.methods.isHR = function () {
-  return this.role === 'hr';
+userSchema.methods.isRecruiter = function () {
+  return this.role === 'recruiter';
 };
 userSchema.methods.isInterviewer = function () {
   return false;
@@ -434,7 +442,7 @@ userSchema.pre('save', function (next) {
       canManageInterviewers: true
     };
   }
-  if (this.role === 'hr' && !this.permissions.canManageJobs) {
+  if (this.role === 'recruiter' && !this.permissions.canManageJobs) {
     this.permissions.canManageJobs = true;
   }
   next();

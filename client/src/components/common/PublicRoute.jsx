@@ -1,11 +1,11 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
-const getDashboardPathByRole = role => {
-  if (role === 'admin') return '/admin/dashboard';
-  if (role === 'hr') return '/hr/dashboard';
-  return '/dashboard';
+const getDashboardPathByRole = (role) => {
+  if (role === "admin") return "/admin/dashboard";
+  if (role === "recruiter") return "/recruiter/dashboard";
+  return "/dashboard";
 };
 
 const PublicRoute = ({ children }) => {

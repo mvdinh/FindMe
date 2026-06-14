@@ -2,11 +2,19 @@ const cloudinary = require('cloudinary').v2;
 const { Readable } = require('stream');
 const path = require('path');
 
+/**
+ * Hàm phụ trợ: Ghi log (in ra console) cho các tiến trình của Cloudinary
+ * chỉ khi biến môi trường CLOUDINARY_LOG=true.
+ */
 function cloudLog(...args) {
   if (String(process.env.CLOUDINARY_LOG || '').toLowerCase() !== 'true') return;
   console.log('[CLOUDINARY]', ...args);
 }
 
+/**
+ * Hàm phụ trợ: Kiểm tra xem các biến môi trường (API Key, Cloud Name, API Secret)
+ * đã được cài đặt đầy đủ chưa, nếu chưa sẽ báo lỗi.
+ */
 function ensureConfigured() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -23,6 +31,10 @@ function ensureConfigured() {
   });
 }
 
+/**
+ * Hàm phụ trợ: Upload một tệp dữ liệu dạng Buffer (nhị phân) lên Cloudinary
+ * thông qua phương thức upload_stream (để tránh rò rỉ bộ nhớ khi tải file lớn).
+ */
 function uploadBuffer(buffer, options = {}) {
   ensureConfigured();
   return new Promise((resolve, reject) => {
@@ -78,6 +90,10 @@ function uploadBuffer(buffer, options = {}) {
   });
 }
 
+/**
+ * Service: Tải file CV (Buffer) của ứng viên lên Cloudinary.
+ * Tự động tạo tên file có chứa ID người dùng và timestamp để đảm bảo tính duy nhất (publicId).
+ */
 async function uploadResumeBuffer(buffer, { userId, originalName, mimeType } = {}) {
   const safeUserId = userId ? String(userId) : 'anonymous';
   const timestamp = Date.now();
@@ -102,6 +118,10 @@ async function uploadResumeBuffer(buffer, { userId, originalName, mimeType } = {
   };
 }
 
+/**
+ * Service: Lấy thông tin tài nguyên (Resource) từ Cloudinary thông qua API.
+ * Thường dùng để làm mới link (Refresh URL) trong trường hợp link cũ bị hỏng hoặc hết hạn.
+ */
 async function getResource(publicId, resourceType = 'raw') {
   if (!publicId) return null;
   ensureConfigured();
@@ -109,6 +129,9 @@ async function getResource(publicId, resourceType = 'raw') {
   return cloudinary.api.resource(publicId, { resource_type: resourceType });
 }
 
+/**
+ * Service: Xóa một file (dựa trên publicId) khỏi máy chủ Cloudinary.
+ */
 async function deleteByPublicId(publicId, resourceType = 'raw') {
   if (!publicId) return null;
   ensureConfigured();

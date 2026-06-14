@@ -17,7 +17,10 @@ import { useRecruiterApplications } from "../../hooks/useRecruiterApplications";
 import { useApiRequest } from "../../hooks/useApiRequest";
 import { formatDateVN } from "@/utils/dateFormat";
 import { recruitmentJobIdRaw } from "../recruiterApplicationCode";
-import { recruiterStatusBadgeClass, recruiterScoreTextClass } from "../recruiterTheme";
+import {
+  recruiterStatusBadgeClass,
+  recruiterScoreTextClass,
+} from "../recruiterTheme";
 import {
   getInterviewPassFailLabel,
   getInterviewPassFailBadgeKey,
@@ -204,7 +207,9 @@ const RecruiterApplicationManagement = () => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await makeJsonRequest(`/api/recruiter/jobs/${jobIdFromUrl}`);
+        const res = await makeJsonRequest(
+          `/api/recruiter/jobs/${jobIdFromUrl}`,
+        );
         if (!cancelled && res?.success && res.data?.title) {
           setCurrentJobTitle(res.data.title);
         } else if (!cancelled) {
@@ -956,57 +961,55 @@ const RecruiterApplicationManagement = () => {
           </div>
         </div>
         <Card className="mb-4 shadow-sm sm:mb-6">
-          <CardContent className="space-y-4 pt-6">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="md:col-span-2">
-                <div className="relative">
-                  <Search
-                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                    aria-hidden
-                  />
-                  <input
-                    ref={setSearchInputRef}
-                    type="search"
-                    value={searchInput}
-                    onChange={(e) => {
-                      setSearchInput(e.target.value);
-                      setIsSearching(false);
-                    }}
-                    onFocus={(e) => {
-                      const length = e.target.value.length;
-                      e.target.setSelectionRange(length, length);
-                    }}
-                    className={cn(
-                      HR_NATIVE_FIELD,
-                      "min-h-11 pl-9 pr-24 font-['Roboto']",
-                    )}
-                    placeholder="Tìm theo mã tuyển dụng, tên ứng viên, vị trí hoặc kỹ năng"
-                    autoComplete="off"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {searchInput !== searchTerm && searchInput.length > 0 ? (
-                      <div className="flex items-center font-['Roboto'] text-xs text-muted-foreground">
-                        <span className="mr-1 inline-block size-3 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
-                        Đang nhập...
-                      </div>
-                    ) : isSearching ? (
-                      <div className="flex items-center font-['Roboto'] text-xs text-muted-foreground">
-                        <span className="mr-1 inline-block size-3 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
-                        Đang tìm kiếm...
-                      </div>
-                    ) : null}
-                  </div>
+          <CardContent className="py-2 px-4 sm:px-6">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-center">
+              <div className="relative flex-1">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+                <input
+                  ref={setSearchInputRef}
+                  type="search"
+                  value={searchInput}
+                  onChange={(e) => {
+                    setSearchInput(e.target.value);
+                    setIsSearching(false);
+                  }}
+                  onFocus={(e) => {
+                    const length = e.target.value.length;
+                    e.target.setSelectionRange(length, length);
+                  }}
+                  className={cn(
+                    HR_NATIVE_FIELD,
+                    "min-h-11 pl-9 pr-24 font-['Roboto']",
+                  )}
+                  placeholder="Tìm theo mã tuyển dụng, tên ứng viên, vị trí hoặc kỹ năng"
+                  autoComplete="off"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {searchInput !== searchTerm && searchInput.length > 0 ? (
+                    <div className="flex items-center font-['Roboto'] text-xs text-muted-foreground">
+                      <span className="mr-1 inline-block size-3 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+                      Đang nhập...
+                    </div>
+                  ) : isSearching ? (
+                    <div className="flex items-center font-['Roboto'] text-xs text-muted-foreground">
+                      <span className="mr-1 inline-block size-3 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+                      Đang tìm kiếm...
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
-              <div>
+              <div className="w-full shrink-0 xl:w-56">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   disabled={loading}
                   className={cn(
                     HR_NATIVE_FIELD,
-                    "min-h-10 w-full px-3 py-2 font-['Roboto'] disabled:cursor-not-allowed disabled:opacity-50",
+                    "min-h-11 w-full px-3 py-2 font-['Roboto'] disabled:cursor-not-allowed disabled:opacity-50",
                   )}
                 >
                   <option value="all">Tất cả trạng thái</option>
@@ -1023,53 +1026,22 @@ const RecruiterApplicationManagement = () => {
                   <option value="rejected">Đã từ chối</option>
                 </select>
               </div>
-            </div>
 
-            <div className={cn(HR_FILTER_CHIPS, "items-center")}>
-              <span className="shrink-0 font-['Roboto'] text-sm font-medium text-muted-foreground">
-                Sắp xếp:
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                disabled={loading}
-                className={cn(
-                  HR_NATIVE_FIELD,
-                  "min-h-10 min-w-[10rem] flex-1 px-3 py-2 font-['Roboto'] text-sm sm:flex-initial disabled:cursor-not-allowed disabled:opacity-50",
-                )}
-              >
-                <option value="appliedDate">Ngày nộp đơn</option>
-                <option value="resumeScore">Điểm hồ sơ</option>
-                <option value="name">Tên ứng viên</option>
-              </select>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="min-h-10 min-w-10 shrink-0 touch-manipulation"
-                disabled={loading}
-                onClick={() =>
-                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-                }
-                aria-label={
-                  sortOrder === "asc" ? "Sắp xếp giảm dần" : "Sắp xếp tăng dần"
-                }
-              >
-                <svg
-                  className={`size-4 ${sortOrder === "asc" ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
+              <div className="w-full shrink-0 xl:w-56">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  disabled={loading}
+                  className={cn(
+                    HR_NATIVE_FIELD,
+                    "min-h-11 w-full px-3 py-2 font-['Roboto'] text-sm disabled:cursor-not-allowed disabled:opacity-50",
+                  )}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </Button>
+                  <option value="appliedDate">Ngày nộp đơn</option>
+                  <option value="resumeScore">Điểm hồ sơ</option>
+                  <option value="name">Tên ứng viên</option>
+                </select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -1121,8 +1093,8 @@ const RecruiterApplicationManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {Array.from({ length: 9 }).map((_, i) => (
-                    <TableHead key={i} className="font-['Roboto'] text-xs">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <TableHead key={i} className="font-['Roboto'] text-sm">
                       {i === 0 ? "…" : ""}
                     </TableHead>
                   ))}
@@ -1131,7 +1103,7 @@ const RecruiterApplicationManagement = () => {
               <TableBody>
                 {Array.from({ length: 10 }).map((_, r) => (
                   <TableRow key={r}>
-                    <TableCell colSpan={9}>
+                    <TableCell colSpan={7}>
                       <Skeleton className="h-9 w-full" />
                     </TableCell>
                   </TableRow>
@@ -1145,28 +1117,25 @@ const RecruiterApplicationManagement = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-14 text-center font-['Roboto'] text-xs">
+                    <TableHead className="w-14 text-center font-['Roboto'] text-sm">
                       STT
                     </TableHead>
-                    <TableHead className="text-center font-['Roboto'] text-xs">
-                      Mã tuyển dụng
-                    </TableHead>
-                    <TableHead className="font-['Roboto'] text-xs">
+                    <TableHead className="font-['Roboto'] text-sm">
                       Ứng viên
                     </TableHead>
-                    <TableHead className="font-['Roboto'] text-xs">
-                      Vị trí tuyển dụng
+                    <TableHead className="font-['Roboto'] text-sm">
+                      Tin tuyển dụng
                     </TableHead>
-                    <TableHead className="font-['Roboto'] text-xs">
+                    <TableHead className="font-['Roboto'] text-sm">
                       Ngày nộp
                     </TableHead>
-                    <TableHead className="font-['Roboto'] text-xs">
+                    <TableHead className="font-['Roboto'] text-sm">
                       Điểm hồ sơ
                     </TableHead>
-                    <TableHead className="font-['Roboto'] text-xs">
+                    <TableHead className="font-['Roboto'] text-sm">
                       Trạng thái
                     </TableHead>
-                    <TableHead className="text-right font-['Roboto'] text-xs">
+                    <TableHead className="text-right font-['Roboto'] text-sm">
                       Thao tác
                     </TableHead>
                   </TableRow>
@@ -1198,42 +1167,34 @@ const RecruiterApplicationManagement = () => {
                       1;
                     return (
                       <TableRow key={appRowId}>
-                        <TableCell className="text-center font-['Roboto'] text-sm tabular-nums text-muted-foreground">
+                        <TableCell className="text-center font-['Roboto'] text-base tabular-nums text-muted-foreground">
                           {stt}
-                        </TableCell>
-                        <TableCell
-                          className="text-center font-mono text-xs font-semibold text-foreground"
-                          title={
-                            recruitmentJobIdRaw(application.job) || undefined
-                          }
-                        >
-                          {recruitmentJobIdRaw(application.job) || "—"}
                         </TableCell>
                         <TableCell>
                           <div className="min-w-0">
-                            <div className="font-['Open_Sans'] text-sm font-medium text-foreground">
+                            <div className="font-['Open_Sans'] text-base font-medium text-foreground">
                               {application.candidate.name}
                             </div>
-                            <div className="font-['Roboto'] text-sm text-muted-foreground">
+                            <div className="font-['Roboto'] text-base text-muted-foreground">
                               {application.experience}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-['Roboto'] text-sm text-foreground">
+                          <div className="font-['Roboto'] text-base text-foreground">
                             {application.job.title}
                           </div>
-                          <div className="font-['Roboto'] text-sm text-muted-foreground">
+                          <div className="font-['Roboto'] text-base text-muted-foreground">
                             {application.job.department}
                           </div>
                         </TableCell>
-                        <TableCell className="font-['Roboto'] text-sm text-muted-foreground">
+                        <TableCell className="font-['Roboto'] text-base text-muted-foreground">
                           {formatDateVN(application.appliedDate)}
                         </TableCell>
                         <TableCell>
                           <div
                             className={cn(
-                              "font-['Roboto'] text-sm",
+                              "font-['Roboto'] text-base",
                               recruiterScoreTextClass(application.resumeScore),
                             )}
                           >

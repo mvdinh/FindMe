@@ -18,16 +18,12 @@ const INITIAL_JOB_STATE = {
   description: '',
   requirements: '',
   benefits: '',
-  department: '',
-  customDepartment: '',
   jobType: '',
   location: '',
   locationType: 'onsite',
   qualification: [],
   customQualifications: [],
   experienceLevel: '',
-  requiredSkills: [],
-  preferredSkills: [],
   salaryRange: {
     min: '',
     max: '',
@@ -66,28 +62,24 @@ const RecruiterCreateJob = () => {
     inSevenDays.setHours(18, 0, 0, 0); // 18:00
     return inSevenDays.toISOString();
   };
-  const seedSampleJob = () => {
+  const seedDeveloperJob = () => {
     const deadline = getSampleDeadline();
     setJobData({
-      title: 'Lập trình viên Frontend cấp cao',
-      description: 'findme đang tìm Lập trình viên Frontend cấp cao để xây dựng và duy trì giao diện web chất lượng cao bằng React, TypeScript và các công cụ hiện đại. Vị trí phối hợp chặt chẽ với nhóm Thiết kế và Backend nhằm đảm bảo trải nghiệm ứng viên và nhà tuyển dụng nhất quán, chuyên nghiệp.',
-      requirements: '- Tối thiểu 3 năm kinh nghiệm phát triển với React, TypeScript và các công nghệ Frontend hiện đại.\n- Thành thạo HTML5, CSS3, Tailwind CSS và thiết kế Responsive.\n- Có tư duy thiết kế tốt, hiểu biết về UX/UI và tối ưu hóa hiệu năng render trang web.',
-      benefits: '- Thu nhập cạnh tranh từ 20,000,000 đến 30,000,000 VNĐ tùy năng lực.\n- Được hưởng đầy đủ chế độ BHXH, BHYT, bảo hiểm sức khỏe cao cấp FindMe Care.\n- Lương tháng 13 và các khoản thưởng hiệu quả dự án hấp dẫn.',
-      department: 'Kỹ thuật',
-      customDepartment: '',
+      title: 'Lập trình viên Fullstack',
+      description: 'findme đang tìm Lập trình viên Fullstack để tham gia xây dựng và phát triển nền tảng hệ thống với quy mô lớn. Bạn sẽ làm việc cùng với đội ngũ Product và Design để tạo ra các tính năng hữu ích cho người dùng.',
+      requirements: '- Tối thiểu 2 năm kinh nghiệm làm việc với React/Vue cho Frontend và Node.js/Java cho Backend.\n- Nắm vững kiến thức về cơ sở dữ liệu quan hệ và NoSQL.\n- Tư duy giải quyết vấn đề tốt, sẵn sàng học hỏi công nghệ mới.',
+      benefits: '- Mức lương cạnh tranh từ 20,000,000 - 35,000,000 VNĐ.\n- Chế độ bảo hiểm sức khỏe đầy đủ, thưởng tháng 13.\n- Làm việc trong môi trường năng động, thoải mái.',
       jobType: 'Full-time',
       location: 'TP. Hồ Chí Minh, Việt Nam',
-      locationType: 'onsite',
-      qualification: ['Cử nhân Khoa học máy tính'],
+      locationType: 'hybrid',
+      qualification: ['Đại học trở lên'],
       customQualifications: [],
-      experienceLevel: 'Senior',
-      requiredSkills: ['React', 'TypeScript', 'JavaScript', 'HTML', 'CSS', 'REST API'],
-      preferredSkills: ['Tailwind CSS', 'Redux Toolkit', 'Testing Library'],
+      experienceLevel: 'Middle',
       salaryRange: {
         min: '20000000',
-        max: '30000000',
+        max: '35000000',
         currency: 'VND',
-        period: 'year',
+        period: 'month',
         format: 'absolute'
       },
       applicationDeadline: deadline,
@@ -97,33 +89,29 @@ const RecruiterCreateJob = () => {
       atsResumeThreshold: 60,
       atsSkipWhenCoverLetter: false,
       resumeRequired: true,
-      defaultInterviewRounds: ['Sơ loại qua điện thoại', 'Phỏng vấn kỹ thuật', 'Phỏng vấn nhân sự'],
+      defaultInterviewRounds: ['Phỏng vấn kỹ thuật', 'Phỏng vấn nhân sự'],
       defaultInterviewer: '',
-      status: 'active'
+      status: 'draft'
     });
   };
-  const seedBlockchainJob = () => {
+  const seedMarketingJob = () => {
     const deadline = getSampleDeadline();
     setJobData({
-      title: 'Kỹ sư Blockchain',
-      description: 'findme đang tìm Kỹ sư Blockchain để thiết kế, phát triển và tối ưu smart contract cùng các dịch vụ backend tích hợp Web3. Vị trí làm việc cùng nhóm sản phẩm để triển khai các tính năng on-chain an toàn và hiệu năng cao.',
-      requirements: '- Tối thiểu 2 năm kinh nghiệm thiết kế và phát triển Smart Contract trên Ethereum/EVM sử dụng Solidity.\n- Hiểu rõ về kiến trúc EVM, chuẩn token ERC-20, ERC-721, ERC-1155 và các kỹ thuật tối ưu chi phí gas.\n- Sử dụng thành thạo Hardhat, Foundry hoặc Truffle cho việc viết test và deploy.',
-      benefits: '- Thu nhập hấp dẫn từ 30,000,000 đến 50,000,000 VNĐ.\n- Cấp thiết bị làm việc Macbook Pro cao cấp.\n- Cơ hội nhận token/equity thưởng hấp dẫn theo tiến độ dự án.',
-      department: 'Kỹ thuật',
-      customDepartment: '',
+      title: 'Chuyên viên Digital Marketing',
+      description: 'Chúng tôi đang tìm kiếm Chuyên viên Digital Marketing có đam mê với số liệu và hiệu suất chiến dịch. Bạn sẽ trực tiếp lên kế hoạch và chạy các chiến dịch trên Facebook Ads, Google Ads để mang lại khách hàng tiềm năng.',
+      requirements: '- Kinh nghiệm từ 1-2 năm thực chiến chạy quảng cáo Facebook, Google.\n- Có khả năng phân tích dữ liệu, theo dõi và tối ưu hóa CPL, CPA.\n- Hiểu biết về SEO và Content Marketing là một lợi thế.',
+      benefits: '- Thu nhập hấp dẫn từ 15,000,000 - 25,000,000 VNĐ + Thưởng KPI.\n- Được cấp ngân sách chạy Ads lớn, cơ hội học hỏi cao.\n- Tham gia các hoạt động team building định kỳ của công ty.',
       jobType: 'Full-time',
-      location: 'TP. Hồ Chí Minh, Việt Nam',
-      locationType: 'hybrid',
-      qualification: ['Cử nhân Khoa học máy tính'],
+      location: 'Hà Nội, Việt Nam',
+      locationType: 'onsite',
+      qualification: ['Đại học trở lên'],
       customQualifications: [],
-      experienceLevel: 'Middle',
-      requiredSkills: ['Solidity', 'EVM', 'Smart Contract', 'Node.js', 'Web3.js', 'Security Audit'],
-      preferredSkills: ['Hardhat', 'Foundry', 'Rust', 'Docker'],
+      experienceLevel: 'Junior',
       salaryRange: {
-        min: '30000000',
-        max: '50000000',
+        min: '15000000',
+        max: '25000000',
         currency: 'VND',
-        period: 'year',
+        period: 'month',
         format: 'absolute'
       },
       applicationDeadline: deadline,
@@ -133,50 +121,46 @@ const RecruiterCreateJob = () => {
       atsResumeThreshold: 65,
       atsSkipWhenCoverLetter: true,
       resumeRequired: true,
-      defaultInterviewRounds: ['Sơ loại qua điện thoại', 'Phỏng vấn kỹ thuật', 'Đánh giá mã nguồn', 'Phỏng vấn nhân sự'],
+      defaultInterviewRounds: ['Phỏng vấn chuyên môn', 'Phỏng vấn văn hóa'],
       defaultInterviewer: '',
-      status: 'active'
+      status: 'draft'
     });
   };
-  const seedJavaBackendJob = () => {
+  const seedLogisticsJob = () => {
     const deadline = getSampleDeadline();
     setJobData({
-      title: 'Lập trình viên Java Backend',
-      description: 'findme cần Lập trình viên Java Backend để xây dựng hệ thống microservices, tối ưu API và đảm bảo độ ổn định cho nền tảng. Vị trí phối hợp với Frontend, DevOps và QA trong toàn bộ vòng đời phát triển sản phẩm.',
-      requirements: '- Tối thiểu 1-2 năm kinh nghiệm lập trình backend với Java và Spring Boot framework.\n- Có kiến thức tốt về cơ sở dữ liệu quan hệ (MySQL, PostgreSQL) và cơ chế caching (Redis).\n- Hiểu biết cơ bản về Docker, RESTful API và cách triển khai CI/CD cơ bản.',
-      benefits: '- Mức lương thưởng hấp dẫn lên tới 32,000,000 VNĐ.\n- Thưởng dự án tháng, quý và xét tăng lương định kỳ 1 lần/năm.\n- Môi trường làm việc thoải mái, nhiều cơ hội học hỏi từ các chuyên gia.',
-      department: 'Kỹ thuật',
-      customDepartment: '',
+      title: 'Nhân viên Điều phối Logistics',
+      description: 'Cần tuyển Nhân viên Điều phối Logistics để quản lý quy trình giao nhận vận tải hàng ngày. Bạn sẽ kết nối trực tiếp với tài xế, đối tác vận chuyển và kho bãi nhằm đảm bảo hàng hóa được giao đúng hẹn và an toàn.',
+      requirements: '- Tốt nghiệp Cao đẳng/Đại học các ngành Logistics, Quản lý chuỗi cung ứng.\n- Kỹ năng xử lý tình huống nhanh nhạy, chịu được áp lực cao.\n- Có khả năng giao tiếp và đàm phán tốt với đối tác.',
+      benefits: '- Lương cứng 10,000,000 - 15,000,000 VNĐ, phụ cấp ăn trưa, điện thoại.\n- Môi trường ổn định, phúc lợi rõ ràng, đóng bảo hiểm theo luật.\n- Cơ hội thăng tiến lên Trưởng nhóm Điều phối sau 1 năm.',
       jobType: 'Full-time',
-      location: 'Hà Nội, Việt Nam',
+      location: 'Bình Dương, Việt Nam',
       locationType: 'onsite',
-      qualification: ['Cử nhân Khoa học máy tính'],
+      qualification: ['Bằng cấp 3'],
       customQualifications: [],
-      experienceLevel: 'Junior',
-      requiredSkills: ['Java', 'Spring Boot', 'REST API', 'MySQL', 'Redis', 'Docker'],
-      preferredSkills: ['Kafka', 'Kubernetes', 'AWS', 'CI/CD'],
+      experienceLevel: 'Fresher',
       salaryRange: {
-        min: '18000000',
-        max: '32000000',
+        min: '10000000',
+        max: '15000000',
         currency: 'VND',
-        period: 'year',
+        period: 'month',
         format: 'absolute'
       },
       applicationDeadline: deadline,
       maxApplicants: '',
-      atsEnabled: true,
+      atsEnabled: false,
       atsEngine: 'scan_cv',
       atsResumeThreshold: 60,
       atsSkipWhenCoverLetter: true,
-      resumeRequired: true,
-      defaultInterviewRounds: ['Sơ loại qua điện thoại', 'Phỏng vấn kỹ thuật', 'Phỏng vấn nhân sự'],
+      resumeRequired: false,
+      defaultInterviewRounds: ['Phỏng vấn trực tiếp'],
       defaultInterviewer: '',
-      status: 'active'
+      status: 'draft'
     });
   };
   const departments = ['Kỹ thuật', 'Marketing', 'Nhân sự', 'Kinh doanh', 'Sản phẩm', 'Thiết kế', 'Tài chính', 'Vận hành', 'Chăm sóc khách hàng', 'Khoa học dữ liệu', 'Đảm bảo chất lượng', 'An ninh', 'Pháp lý', 'Hành chính', 'Khác'];
   const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance'];
-  const qualifications = ['Trung học phổ thông', 'Trung cấp/Cao đẳng', 'Cử nhân Kỹ thuật', 'Cử nhân Khoa học máy tính', 'Cử nhân Kinh doanh', 'Cử nhân Thương mại', 'Cử nhân Nghệ thuật', 'Cử nhân Khoa học', 'Thạc sĩ Kỹ thuật', 'Thạc sĩ Khoa học máy tính', 'Thạc sĩ Quản trị Kinh doanh (MBA)', 'Thạc sĩ Thương mại', 'Thạc sĩ Nghệ thuật', 'Thạc sĩ Khoa học', 'Tiến sĩ', 'Chứng chỉ nghề nghiệp', 'Chứng chỉ kỹ thuật'];
+  const qualifications = ['Đại học trở lên', 'Không yêu cầu bằng cấp', 'Bằng cấp 3'];
   const experienceLevels = ['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director'];
   const handleInputChange = (field, value) => {
     if (typeof field === 'object' && field.target) {
@@ -268,14 +252,7 @@ const RecruiterCreateJob = () => {
         toast.warning('Vui lòng nhập mô tả công việc');
         return;
       }
-      if (!jobData.department && !jobData.customDepartment.trim()) {
-        toast.warning('Vui lòng chọn phòng ban');
-        return;
-      }
-      if (jobData.department === 'Khác' && !jobData.customDepartment.trim()) {
-        toast.warning('Vui lòng nhập phòng ban khi chọn "Khác"');
-        return;
-      }
+
       if (jobData.qualification.length === 0 && jobData.customQualifications.length === 0) {
         toast.warning('Vui lòng chọn ít nhất một bằng cấp/yêu cầu');
         return;
@@ -305,8 +282,7 @@ const RecruiterCreateJob = () => {
         description: jobData.description,
         requirements: jobData.requirements,
         benefits: jobData.benefits,
-        department: jobData.department === 'Khác' ? jobData.customDepartment.trim() : jobData.department,
-        jobType: jobData.jobType,
+        jobType: jobData.jobType || undefined,
         location: jobData.location,
         locationType: jobData.locationType ? jobData.locationType.charAt(0).toUpperCase() + jobData.locationType.slice(1).toLowerCase() : 'Onsite',
         salaryRange: {
@@ -317,10 +293,8 @@ const RecruiterCreateJob = () => {
           format: 'absolute'
         },
         qualification: [...jobData.qualification, ...jobData.customQualifications],
-        experienceLevel: jobData.experienceLevel,
-        requiredSkills: jobData.requiredSkills,
-        preferredSkills: jobData.preferredSkills,
-        applicationDeadline: jobData.applicationDeadline,
+        experienceLevel: jobData.experienceLevel || undefined,
+        applicationDeadline: jobData.applicationDeadline || undefined,
         maxApplicants: jobData.maxApplicants ? Number(jobData.maxApplicants) : undefined,
         atsEnabled: !!jobData.atsEnabled,
         atsEngine: jobData.atsEnabled ? (jobData.atsEngine === 'scan_cv' ? 'scan_cv' : 'gemini') : 'gemini',
@@ -351,7 +325,10 @@ const RecruiterCreateJob = () => {
       }
     } catch (error) {
       console.error('Error submitting job:', error);
-      const errMsg = String(error?.message || '');
+      let errMsg = String(error?.message || '');
+      if (error?.response?.data?.errors?.length > 0) {
+        errMsg = error.response.data.errors.map(e => e.message).join(', ');
+      }
       if (errMsg === 'Authentication required' || errMsg.includes('401') || /đăng nhập|xác thực/i.test(errMsg)) {
         toast.error('Phiên làm việc hết hạn hoặc chưa đăng nhập. Vui lòng đăng nhập lại.');
         navigate('/login');
@@ -363,7 +340,7 @@ const RecruiterCreateJob = () => {
     }
   };
   const isFormValid = () => {
-    return jobData.title.trim() && jobData.description.trim() && jobData.department && jobData.jobType && jobData.qualification && jobData.experienceLevel && jobData.applicationDeadline;
+    return jobData.title.trim() && jobData.description.trim() && jobData.jobType && jobData.qualification && jobData.experienceLevel && jobData.applicationDeadline;
   };
   return <RecruiterLayout>
       <div className={HR_PAGE}>
@@ -376,56 +353,56 @@ const RecruiterCreateJob = () => {
              <Button
               type="button"
               size="sm"
-              variant={activeTemplate === 'frontend' ? 'default' : 'outline'}
-              className={`font-['Roboto'] ${activeTemplate === 'frontend' ? 'bg-primary text-primary-foreground' : ''}`}
+              variant={activeTemplate === 'developer' ? 'default' : 'outline'}
+              className={`font-['Roboto'] ${activeTemplate === 'developer' ? 'bg-primary text-primary-foreground' : ''}`}
               onClick={() => {
-                if (activeTemplate === 'frontend') {
+                if (activeTemplate === 'developer') {
                   setActiveTemplate(null);
                   setJobData(INITIAL_JOB_STATE);
                 } else {
-                  setActiveTemplate('frontend');
-                  seedSampleJob();
+                  setActiveTemplate('developer');
+                  seedDeveloperJob();
                 }
               }}
               disabled={formBusy}
             >
-              Mẫu Frontend
+              Mẫu Lập trình viên
             </Button>
             <Button
               type="button"
               size="sm"
-              variant={activeTemplate === 'blockchain' ? 'default' : 'outline'}
-              className={`font-['Roboto'] ${activeTemplate === 'blockchain' ? 'bg-primary text-primary-foreground' : ''}`}
+              variant={activeTemplate === 'marketing' ? 'default' : 'outline'}
+              className={`font-['Roboto'] ${activeTemplate === 'marketing' ? 'bg-primary text-primary-foreground' : ''}`}
               onClick={() => {
-                if (activeTemplate === 'blockchain') {
+                if (activeTemplate === 'marketing') {
                   setActiveTemplate(null);
                   setJobData(INITIAL_JOB_STATE);
                 } else {
-                  setActiveTemplate('blockchain');
-                  seedBlockchainJob();
+                  setActiveTemplate('marketing');
+                  seedMarketingJob();
                 }
               }}
               disabled={formBusy}
             >
-              Mẫu Blockchain
+              Mẫu Marketing
             </Button>
             <Button
               type="button"
               size="sm"
-              variant={activeTemplate === 'java' ? 'default' : 'outline'}
-              className={`font-['Roboto'] ${activeTemplate === 'java' ? 'bg-primary text-primary-foreground' : ''}`}
+              variant={activeTemplate === 'logistics' ? 'default' : 'outline'}
+              className={`font-['Roboto'] ${activeTemplate === 'logistics' ? 'bg-primary text-primary-foreground' : ''}`}
               onClick={() => {
-                if (activeTemplate === 'java') {
+                if (activeTemplate === 'logistics') {
                   setActiveTemplate(null);
                   setJobData(INITIAL_JOB_STATE);
                 } else {
-                  setActiveTemplate('java');
-                  seedJavaBackendJob();
+                  setActiveTemplate('logistics');
+                  seedLogisticsJob();
                 }
               }}
               disabled={formBusy}
             >
-              Mẫu Java Backend
+              Mẫu Logistics
             </Button>
             <Button type="button" variant="outline" className="font-['Roboto']" onClick={() => navigate('/recruiter/jobs')} disabled={formBusy}>
               <ArrowLeft className="mr-2 size-4" />
@@ -450,29 +427,14 @@ const RecruiterCreateJob = () => {
                   <input type="text" value={jobData.title} onChange={e => handleInputChange('title', e.target.value)} placeholder="Chức danh tuyển dụng" className={HR_INPUT_PILL} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="mb-2 block font-['Roboto'] text-foreground">
-                      Phòng ban <span className="text-destructive">*</span>
-                    </Label>
-                    <select value={jobData.department} onChange={e => handleInputChange('department', e.target.value)} className={HR_INPUT_PILL}>
-                      <option value="">Chọn phòng ban</option>
-                      {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-                      <option value="Khác">Khác</option>
-                    </select>
-                    
-                    {jobData.department === 'Khác' && <input type="text" placeholder="Nhập phòng ban" value={jobData.customDepartment} onChange={e => handleInputChange('customDepartment', e.target.value)} className={`${HR_INPUT_PILL} mt-2`} />}
-                  </div>
-
-                  <div>
-                    <Label className="mb-2 block font-['Roboto'] text-foreground">
-                      Loại công việc <span className="text-destructive">*</span>
-                    </Label>
-                    <select value={jobData.jobType} onChange={e => handleInputChange('jobType', e.target.value)} className={HR_INPUT_PILL}>
-                      <option value="">Chọn loại công việc</option>
-                      {jobTypes.map(type => <option key={type} value={type}>{type}</option>)}
-                    </select>
-                  </div>
+                <div>
+                  <Label className="mb-2 block font-['Roboto'] text-foreground">
+                    Loại công việc <span className="text-destructive">*</span>
+                  </Label>
+                  <select value={jobData.jobType} onChange={e => handleInputChange('jobType', e.target.value)} className={HR_INPUT_PILL}>
+                    <option value="">Chọn loại công việc</option>
+                    {jobTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                  </select>
                 </div>
 
                 <div>
@@ -585,7 +547,9 @@ const RecruiterCreateJob = () => {
                                 <X className="size-3" />
                               </Button>
                             </Badge>)}
-                        </div>
+                
+                
+                 </div>
                       </div>}
                     <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/30 p-3">
                       <div className="grid grid-cols-1 gap-2">
@@ -617,45 +581,7 @@ const RecruiterCreateJob = () => {
                   </div>
                 </div>
 
-                <div>
-                  <Label className="mb-2 block font-['Roboto'] text-foreground">
-                    Kỹ năng bắt buộc
-                  </Label>
-                  <div className="mb-2 flex flex-wrap gap-2">
-                    {jobData.requiredSkills.map((skill, index) => <Badge key={index} variant="outline" className="h-auto gap-0.5 rounded-full border-primary/30 bg-primary/10 py-1 pl-2.5 pr-0.5 text-sm font-normal text-primary">
-                        {skill}
-                        <Button type="button" variant="ghost" size="icon" className="size-6 shrink-0 text-primary hover:bg-primary/20" onClick={() => handleSkillRemove('required', index)} aria-label="Xóa kỹ năng">
-                          <X className="size-3.5" />
-                        </Button>
-                      </Badge>)}
-                  </div>
-                  <div className="flex gap-2">
-                    <input type="text" value={skillInput} onChange={e => setSkillInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), handleSkillAdd('required'))} placeholder="Kỹ năng bắt buộc" className={`flex-1 ${HR_INPUT_PILL}`} />
-                    <Button type="button" variant="outline" className="shrink-0 rounded-full font-['Roboto']" onClick={() => handleSkillAdd('required')}>
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
 
-                <div>
-                  <Label className="mb-2 block font-['Roboto'] text-foreground">
-                    Kỹ năng ưu tiên (không bắt buộc)
-                  </Label>
-                  <div className="mb-2 flex flex-wrap gap-2">
-                    {jobData.preferredSkills.map((skill, index) => <Badge key={index} variant="secondary" className="h-auto gap-0.5 rounded-full py-1 pl-2.5 pr-0.5 text-sm font-normal">
-                        {skill}
-                        <Button type="button" variant="ghost" size="icon" className="size-6 shrink-0 hover:bg-muted" onClick={() => handleSkillRemove('preferred', index)} aria-label="Xóa kỹ năng">
-                          <X className="size-3.5" />
-                        </Button>
-                      </Badge>)}
-                  </div>
-                  <div className="flex gap-2">
-                    <input type="text" value={preferredSkillInput} onChange={e => setPreferredSkillInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), handleSkillAdd('preferred'))} placeholder="Kỹ năng ưu tiên" className={`flex-1 ${HR_INPUT_PILL}`} />
-                    <Button type="button" variant="outline" className="shrink-0 rounded-full font-['Roboto']" onClick={() => handleSkillAdd('preferred')}>
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
               </div>
               </CardContent>
             </Card>

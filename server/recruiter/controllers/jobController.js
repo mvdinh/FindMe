@@ -130,7 +130,8 @@ const getJobs = async (req, res) => {
         createdBy: createdByMe ? 'me' : 'other',
         postedByName: `${job.postedBy.lastName} ${job.postedBy.firstName}`,
         salary: salaryDisplay,
-        requirements: [...(job.requiredSkills || []), job.qualification, job.experienceLevel].filter(Boolean),
+        requirements: job.requirements,
+        benefits: job.benefits,
         views: job.views || 0,
         salaryRange: job.salaryRange,
         requiredSkills: job.requiredSkills || [],
@@ -240,7 +241,7 @@ const createJob = async (req, res) => {
     let needsRequest = false;
 
     if (finalStatus === 'active') {
-      finalStatus = 'draft';
+      finalStatus = 'pending_approval';
       needsRequest = true;
     }
 
@@ -288,24 +289,6 @@ const createJob = async (req, res) => {
           });
         } catch (e) {
           console.error('Failed to notify admins (job created):', e);
-        }
-        try {
-          await createAndEmit({
-            toUserId: userId,
-            toRole: 'recruiter',
-            type: 'job_created',
-            title: 'Bạn đã tạo tin tuyển dụng',
-            message: `Tin "${normalizedInput.title}" đã được lưu. Quản trị viên cũng nhận được thông báo.`,
-            actionUrl: '/recruiter/jobs',
-            entity: {
-              kind: 'Job',
-              id: job._id
-            },
-            priority: 'low',
-            createdBy: userId
-          });
-        } catch (e) {
-          console.error('Failed to notify recruiter self (job created):', e);
         }
       }
     } catch (notifError) {
@@ -440,7 +423,7 @@ const updateJob = async (req, res) => {
     
     let needsRequest = false;
     if (patch.status === 'active' && existing.status !== 'active') {
-      patch.status = existing.status; // Enforce admin approval by not changing status directly
+      patch.status = 'pending_approval'; // Enforce admin approval by setting to pending_approval
       needsRequest = true;
     } else if (patch.status != null && patch.status !== existing.status) {
       patch.lastStatusActorRole = String(req.user.role || '').toLowerCase() === 'admin' ? 'admin' : 'recruiter';

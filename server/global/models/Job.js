@@ -2,13 +2,13 @@ const mongoose = require('mongoose');
 const jobSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Job title is required'],
+    required: [function() { return this.status !== 'draft'; }, 'Job title is required'],
     trim: true,
     maxlength: [200, 'Job title cannot be more than 200 characters']
   },
   description: {
     type: String,
-    required: [true, 'Job description is required'],
+    required: [function() { return this.status !== 'draft'; }, 'Job description is required'],
     maxlength: [5000, 'Job description cannot be more than 5000 characters']
   },
   requirements: {
@@ -21,13 +21,13 @@ const jobSchema = new mongoose.Schema({
   },
   department: {
     type: String,
-    required: [true, 'Department is required'],
-    trim: true
+    trim: true,
+    default: 'Khác'
   },
   jobType: {
     type: String,
     enum: ['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance'],
-    required: [true, 'Job type is required']
+    required: [function() { return this.status !== 'draft'; }, 'Job type is required']
   },
   location: {
     type: String,
@@ -62,12 +62,12 @@ const jobSchema = new mongoose.Schema({
   },
   qualification: {
     type: [String],
-    required: [true, 'Required qualification is required']
+    required: function() { return this.status !== 'draft'; }
   },
   experienceLevel: {
     type: String,
     enum: ['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director'],
-    required: [true, 'Experience level is required']
+    required: [function() { return this.status !== 'draft'; }, 'Experience level is required']
   },
   requiredSkills: {
     type: [String],
@@ -79,7 +79,7 @@ const jobSchema = new mongoose.Schema({
   },
   applicationDeadline: {
     type: Date,
-    required: [true, 'Application deadline is required']
+    required: [function() { return this.status !== 'draft'; }, 'Application deadline is required']
   },
   maxApplicants: {
     type: Number
@@ -125,7 +125,7 @@ const jobSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'active', 'closed'],
+    enum: ['draft', 'pending_approval', 'active', 'closed', 'rejected'],
     default: 'draft'
   },
   views: {
@@ -139,6 +139,8 @@ const jobSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Đánh index
 jobSchema.add({
   publishedAt: {
     type: Date

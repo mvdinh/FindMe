@@ -18,12 +18,12 @@ export const HR_TEXTAREA = cn(
 );
 
 export const HR_INPUT_PILL = cn(
-  "flex w-full rounded-full border border-input bg-background py-3 pl-4 pr-4 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 font-['Roboto']",
+  "flex w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 font-['Roboto']",
   HR_FOCUS_RING
 );
 
 export const HR_TEXTAREA_PILL = cn(
-  "flex min-h-[120px] w-full resize-none rounded-2xl border border-input bg-background py-3 pl-4 pr-4 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 font-['Roboto']",
+  "flex min-h-[120px] w-full resize-none rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 font-['Roboto']",
   HR_FOCUS_RING
 );
 

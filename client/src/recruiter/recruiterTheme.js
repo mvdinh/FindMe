@@ -9,6 +9,8 @@ export function recruiterStatusBadgeClass(status) {
     case 'scheduled':
     case 'confirmed':
       return 'border border-primary/25 bg-primary/10 text-primary';
+    case 'pending_approval':
+      return 'border border-destructive/20 bg-destructive/10 text-destructive';
     case 'draft':
       return 'bg-secondary text-secondary-foreground';
     case 'closed':

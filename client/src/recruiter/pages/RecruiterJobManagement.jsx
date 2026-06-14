@@ -40,23 +40,24 @@ import {
 import {
   AlertCircle,
   Briefcase,
+  CalendarDays,
   Check,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   Eye,
   MoreVertical,
   Pencil,
   Plus,
   Search,
+  User,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 const RecruiterJobManagement = () => {
   const { user } = useAuth();
-  const isHr = String(user?.role || "").toLowerCase() === 'recruiter';
+  const isHr = String(user?.role || "").toLowerCase() === "recruiter";
   const needsApprovalForStatusChange = (job, targetStatus) => {
     if (!isHr) return false;
-    if (targetStatus === "active") return true; // ALWAYS require admin approval to go active
+    if (targetStatus === "active") return true;
     return false;
   };
   const jobStatusKey = (job) => (job.status || "").toLowerCase();
@@ -205,18 +206,16 @@ const RecruiterJobManagement = () => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [searchInputRef, showJobModal, statusRequestModal]);
   useEffect(() => {
-    const statusFilter =
-      filter === "active" ? "active" : filter === "draft" ? "draft" : "";
-    const filterType = filter === "my-jobs" ? "my-jobs" : "";
+    const statusFilter = filter === "all" ? "" : filter;
+    const filterType = "";
     fetchJobs(1, searchTerm, statusFilter, filterType);
     setCurrentPage(1);
     setInitialLoad(false);
   }, []);
   useEffect(() => {
     if (location.state?.refreshJobs) {
-      const statusFilter =
-        filter === "active" ? "active" : filter === "draft" ? "draft" : "";
-      const filterType = filter === "my-jobs" ? "my-jobs" : "";
+      const statusFilter = filter === "all" ? "" : filter;
+      const filterType = "";
       fetchJobs(1, searchTerm, statusFilter, filterType);
       setCurrentPage(1);
       navigate(location.pathname, {
@@ -227,9 +226,8 @@ const RecruiterJobManagement = () => {
   }, [location.state?.refreshJobs]);
   useEffect(() => {
     if (!initialLoad) {
-      const statusFilter =
-        filter === "active" ? "active" : filter === "draft" ? "draft" : "";
-      const filterType = filter === "my-jobs" ? "my-jobs" : "";
+      const statusFilter = filter === "all" ? "" : filter;
+      const filterType = "";
       fetchJobs(1, searchTerm, statusFilter, filterType);
       setCurrentPage(1);
     }
@@ -252,17 +250,16 @@ const RecruiterJobManagement = () => {
     };
   }, [showJobModal, statusRequestModal]);
   const handlePageChange = (page) => {
-    const statusFilter =
-      filter === "active" ? "active" : filter === "draft" ? "draft" : "";
-    const filterType = filter === "my-jobs" ? "my-jobs" : "";
+    const statusFilter = filter === "all" ? "" : filter;
+    const filterType = "";
     fetchJobs(page, searchTerm, statusFilter, filterType);
   };
   const getStatusLabel = (status) => {
     const s = (status || "").toLowerCase();
-    if (s === "active") return "Đang đăng tuyển";
-    if (s === "draft") return "Bản nháp";
+    if (s === "active") return "Đang hoạt động";
     if (s === "closed") return "Đã đóng";
-    if (s === "archived") return "Đã lưu trữ";
+    if (s === "pending_approval") return "Chờ phê duyệt";
+    if (s === "draft") return "Bản nháp";
     return status || "";
   };
   const handleJobAction = async (action, jobId) => {
@@ -315,9 +312,8 @@ const RecruiterJobManagement = () => {
         setError(null);
         const res = await patchJobStatusDirect(job.id, targetStatus);
         if (res?.success) {
-          const statusFilter =
-            filter === "active" ? "active" : filter === "draft" ? "draft" : "";
-          const filterType = filter === "my-jobs" ? "my-jobs" : "";
+          const statusFilter = filter === "all" ? "" : filter;
+          const filterType = "";
           await fetchJobs(currentPage, searchTerm, statusFilter, filterType);
         } else {
           setError(res?.message || "Không cập nhật được trạng thái");
@@ -355,9 +351,8 @@ const RecruiterJobManagement = () => {
       if (res?.success) {
         setStatusRequestModal(null);
         setStatusRequestMessage("");
-        const statusFilter =
-          filter === "active" ? "active" : filter === "draft" ? "draft" : "";
-        const filterType = filter === "my-jobs" ? "my-jobs" : "";
+        const statusFilter = filter === "all" ? "" : filter;
+        const filterType = "";
         await fetchJobs(currentPage, searchTerm, statusFilter, filterType);
       } else {
         setError(res?.message || "Không gửi được yêu cầu");
@@ -398,7 +393,7 @@ const RecruiterJobManagement = () => {
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
             {loading ? (
               Array.from({ length: 6 }).map((_, index) => (
                 <Card key={index} className="shadow-sm">
@@ -430,16 +425,7 @@ const RecruiterJobManagement = () => {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="shadow-sm">
-                  <CardContent className="pt-6">
-                    <p className="mb-1 font-['Roboto'] text-sm text-muted-foreground">
-                      Bản nháp
-                    </p>
-                    <p className="font-['Open_Sans'] text-2xl font-bold text-foreground">
-                      {summary.totalDraft}
-                    </p>
-                  </CardContent>
-                </Card>
+
                 <Card className="shadow-sm">
                   <CardContent className="pt-6">
                     <p className="mb-1 font-['Roboto'] text-sm text-muted-foreground">
@@ -450,16 +436,7 @@ const RecruiterJobManagement = () => {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="shadow-sm">
-                  <CardContent className="pt-6">
-                    <p className="mb-1 font-['Roboto'] text-sm text-muted-foreground">
-                      Tin do tôi đăng
-                    </p>
-                    <p className="font-['Open_Sans'] text-2xl font-bold text-foreground">
-                      {summary.myJobs}
-                    </p>
-                  </CardContent>
-                </Card>
+
                 <Card className="shadow-sm">
                   <CardContent className="pt-6">
                     <p className="mb-1 font-['Roboto'] text-sm text-muted-foreground">
@@ -489,13 +466,8 @@ const RecruiterJobManagement = () => {
                 size="sm"
                 onClick={() => {
                   setError(null);
-                  const statusFilter =
-                    filter === "active"
-                      ? "active"
-                      : filter === "draft"
-                        ? "draft"
-                        : "";
-                  const filterType = filter === "my-jobs" ? "my-jobs" : "";
+                  const statusFilter = filter === "all" ? "" : filter;
+                  const filterType = "";
                   fetchJobs(currentPage, searchTerm, statusFilter, filterType);
                 }}
               >
@@ -551,33 +523,41 @@ const RecruiterJobManagement = () => {
               </Button>
               <Button
                 type="button"
-                variant={filter === "my-jobs" ? "default" : "secondary"}
-                size="sm"
-                disabled={loading}
-                className="shrink-0 touch-manipulation font-['Roboto']"
-                onClick={() => setFilter("my-jobs")}
-              >
-                Của tôi
-              </Button>
-              <Button
-                type="button"
                 variant={filter === "active" ? "default" : "secondary"}
                 size="sm"
                 disabled={loading}
                 className="shrink-0 touch-manipulation font-['Roboto']"
                 onClick={() => setFilter("active")}
               >
-                Đang đăng
+                Đang hoạt động
+              </Button>
+              <Button
+                type="button"
+                variant={filter === "closed" ? "default" : "secondary"}
+                size="sm"
+                disabled={loading}
+                className="shrink-0 touch-manipulation font-['Roboto']"
+                onClick={() => setFilter("closed")}
+              >
+                Đã đóng
               </Button>
               <Button
                 type="button"
                 variant={filter === "draft" ? "default" : "secondary"}
                 size="sm"
-                disabled={loading}
                 className="shrink-0 touch-manipulation font-['Roboto']"
                 onClick={() => setFilter("draft")}
               >
                 Bản nháp
+              </Button>
+              <Button
+                type="button"
+                variant={filter === "pending_approval" ? "default" : "secondary"}
+                size="sm"
+                className="shrink-0 touch-manipulation font-['Roboto']"
+                onClick={() => setFilter("pending_approval")}
+              >
+                Chờ phê duyệt
               </Button>
             </div>
           </CardContent>
@@ -590,16 +570,14 @@ const RecruiterJobManagement = () => {
                 <TableRow>
                   {[
                     "STT",
-                    "Mã TD",
-                    "Chức danh",
-                    "Phòng ban",
+                    "Tin tuyển dụng",
                     "Trạng thái",
-                    "Ứng viên",
-                    "Ngày đăng",
-                    "Hạn",
-                    "",
+                    "Số ứng viên",
+                    "Ngày đăng tin",
+                    "Ngày hết hạn",
+                    "Thao tác",
                   ].map((h) => (
-                    <TableHead key={h} className="font-['Roboto'] text-xs">
+                    <TableHead key={h} className="font-['Roboto'] text-sm">
                       {h}
                     </TableHead>
                   ))}
@@ -608,7 +586,7 @@ const RecruiterJobManagement = () => {
               <TableBody>
                 {Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={9}>
+                    <TableCell colSpan={7}>
                       <Skeleton className="h-9 w-full" />
                     </TableCell>
                   </TableRow>
@@ -625,31 +603,25 @@ const RecruiterJobManagement = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-14 text-center font-['Roboto'] text-xs">
+                      <TableHead className="w-14 text-center font-['Roboto'] text-sm">
                         STT
                       </TableHead>
-                      <TableHead className="font-['Roboto'] text-xs">
-                        Mã tuyển dụng
+                      <TableHead className="font-['Roboto'] text-sm">
+                        Tin tuyển dụng
                       </TableHead>
-                      <TableHead className="font-['Roboto'] text-xs">
-                        Chức danh
-                      </TableHead>
-                      <TableHead className="font-['Roboto'] text-xs">
-                        Phòng ban
-                      </TableHead>
-                      <TableHead className="font-['Roboto'] text-xs">
+                      <TableHead className="font-['Roboto'] text-sm">
                         Trạng thái
                       </TableHead>
-                      <TableHead className="font-['Roboto'] text-xs">
-                        Ứng viên
+                      <TableHead className="font-['Roboto'] text-sm">
+                        Số ứng viên
                       </TableHead>
-                      <TableHead className="font-['Roboto'] text-xs">
-                        Ngày đăng
+                      <TableHead className="font-['Roboto'] text-sm">
+                        Ngày đăng tin
                       </TableHead>
-                      <TableHead className="font-['Roboto'] text-xs">
-                        Hạn chót
+                      <TableHead className="font-['Roboto'] text-sm">
+                        Ngày hết hạn
                       </TableHead>
-                      <TableHead className="text-right font-['Roboto'] text-xs">
+                      <TableHead className="text-right font-['Roboto'] text-sm">
                         Thao tác
                       </TableHead>
                     </TableRow>
@@ -660,50 +632,31 @@ const RecruiterJobManagement = () => {
                       const jobCode = recruitmentJobIdRaw(job);
                       return (
                         <TableRow key={job.id}>
-                          <TableCell className="text-center font-['Roboto'] text-sm tabular-nums text-muted-foreground">
+                          <TableCell className="text-center font-['Roboto'] text-base tabular-nums text-muted-foreground">
                             {stt}
-                          </TableCell>
-                          <TableCell
-                            className="text-center font-mono text-xs font-medium text-foreground"
-                            title={jobCode || undefined}
-                          >
-                            {jobCode || "—"}
                           </TableCell>
                           <TableCell>
                             <Link
                               to={`/recruiter/applications?jobId=${job.id}`}
-                              className="font-['Open_Sans'] text-sm font-medium text-primary hover:underline"
+                              className="font-['Open_Sans'] text-base font-medium text-primary hover:underline"
                             >
                               {job.title}
                             </Link>
-                            <div className="font-['Roboto'] text-xs text-muted-foreground">
-                              {job.salary}
-                            </div>
-                            <div className="font-['Roboto'] text-xs text-muted-foreground/80">
-                              Đăng bởi {job.postedByName}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-['Roboto'] text-sm text-foreground">
-                              {job.department}
-                            </div>
-                            <div className="font-['Roboto'] text-xs text-muted-foreground">
-                              {job.jobType}
-                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col items-start gap-1">
                               <Badge
                                 variant="outline"
                                 className={cn(
-                                  "font-normal",
+                                  "font-normal text-sm px-2 py-0.5",
                                   recruiterStatusBadgeClass(job.status),
                                 )}
                               >
                                 {getStatusLabel(job.status)}
                               </Badge>
                               {isHr &&
-                                pendingJobIdSet.includes(String(job.id)) && (
+                                pendingJobIdSet.includes(String(job.id)) &&
+                                jobStatusKey(job) !== "draft" && jobStatusKey(job) !== "pending_approval" && (
                                   <span className="rounded bg-destructive/10 px-2 py-0.5 font-['Roboto'] text-xs font-medium text-destructive">
                                     Chờ phê duyệt
                                   </span>
@@ -719,19 +672,19 @@ const RecruiterJobManagement = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-['Roboto'] text-sm text-foreground">
+                            <div className="font-['Roboto'] text-base text-foreground">
                               {job.applicants}
                             </div>
                             {job.recentApplications > 0 && (
-                              <div className="font-['Roboto'] text-xs text-primary">
+                              <div className="font-['Roboto'] text-sm text-primary">
                                 +{job.recentApplications} tuần này
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className="font-['Roboto'] text-sm text-muted-foreground">
+                          <TableCell className="font-['Roboto'] text-base text-muted-foreground">
                             {formatDateVN(job.postedDate)}
                           </TableCell>
-                          <TableCell className="font-['Roboto'] text-sm text-muted-foreground">
+                          <TableCell className="font-['Roboto'] text-base text-muted-foreground">
                             {job.deadline
                               ? formatDateVN(job.deadline) || "—"
                               : "Không có hạn"}
@@ -926,94 +879,153 @@ const RecruiterJobManagement = () => {
             </div>
           }
         >
-          {selectedJob && (
-            <>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:mb-6">
-                {[
-                  {
-                    title: "Mã tuyển dụng",
-                    value: (
-                      <span className="font-mono text-xs break-all">
-                        {recruitmentJobIdRaw(selectedJob) || "—"}
-                      </span>
-                    ),
-                  },
-                  {
-                    title: "Phòng ban",
-                    value: selectedJob.department,
-                  },
-                  {
-                    title: "Loại hình",
-                    value: selectedJob.jobType,
-                  },
-                  {
-                    title: "Địa điểm",
-                    value: selectedJob.location,
-                  },
-                  {
-                    title: "Hình thức làm việc",
-                    value: formatLocationTypeLabel(selectedJob.locationType),
-                  },
-                  {
-                    title: "Mức lương",
-                    value: selectedJob.salary,
-                  },
-                  {
-                    title: "Trạng thái",
-                    value: (
+          {selectedJob &&
+            (() => {
+              let desc = selectedJob.description || "";
+              const idx = desc.indexOf("Cách thức ứng tuyển");
+              if (idx !== -1) {
+                let cutIdx = desc.lastIndexOf("<p", idx);
+                if (cutIdx === -1) cutIdx = desc.lastIndexOf("<h", idx);
+                if (cutIdx === -1) cutIdx = desc.lastIndexOf("<div", idx);
+                if (cutIdx === -1 || idx - cutIdx > 100) cutIdx = idx;
+                desc = desc.substring(0, cutIdx);
+              }
+
+              return (
+                <div className="font-['Roboto'] text-foreground max-h-[65vh] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+                  {/* Badge trạng thái + hạn nộp */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+                    <div className="flex flex-col gap-1">
                       <Badge
                         variant="outline"
                         className={cn(
-                          "font-normal",
+                          "w-fit text-xs px-3 py-0.5 font-normal ",
                           recruiterStatusBadgeClass(selectedJob.status),
                         )}
                       >
                         {getStatusLabel(selectedJob.status)}
                       </Badge>
-                    ),
-                  },
-                  {
-                    title: "Ứng viên",
-                    value: `${selectedJob.applicants} tổng`,
-                  },
-                  {
-                    title: "Đăng bởi",
-                    value: selectedJob.postedByName,
-                  },
-                  {
-                    title: "Lượt xem",
-                    value: selectedJob.views || 0,
-                  },
-                  {
-                    title: "Cấp kinh nghiệm",
-                    value: selectedJob.experienceLevel,
-                  },
-                  {
-                    title: "Hạn nộp",
-                    value: formatDateVN(selectedJob.applicationDeadline),
-                  },
-                ].map((detail) => (
-                  <div key={detail.title}>
-                    <h4 className="mb-1 font-['Roboto'] text-sm font-medium text-muted-foreground">
-                      {detail.title}
-                    </h4>
-                    <div className="font-['Roboto'] text-foreground">
-                      {detail.value}
                     </div>
                   </div>
-                ))}
-              </div>
 
-              <div className="border-t border-border pt-6">
-                <h4 className="mb-2 font-['Open_Sans'] text-lg font-semibold text-foreground">
-                  Mô tả
-                </h4>
-                <p className="whitespace-pre-wrap font-['Roboto'] text-muted-foreground">
-                  {selectedJob.description}
-                </p>
-              </div>
-            </>
-          )}
+                  {/* Chi tiết tin — chips kiểu TopCV */}
+                  <div className="mb-5">
+                    <h4 className="font-['Open_Sans'] text-base font-semibold border-l-[3px] border-primary pl-3 mb-3">
+                      Chi tiết tin tuyển dụng
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[auto_auto_auto] lg:justify-start gap-y-4 gap-x-8 lg:gap-x-16 text-sm mt-4">
+                      {[
+                        {
+                          label: "Kinh nghiệm",
+                          value: selectedJob.experienceLevel,
+                        },
+                        { label: "Loại hình", value: selectedJob.jobType },
+                        {
+                          label: "Hình thức",
+                          value: formatLocationTypeLabel(
+                            selectedJob.locationType,
+                          ),
+                        },
+                        { label: "Mức lương", value: selectedJob.salary },
+                        { label: "Địa điểm", value: selectedJob.location },
+                      ]
+                        .filter((x) => x.value)
+                        .map(({ label, value }) => (
+                          <div key={label} className="flex items-start gap-2">
+                            <span className="font-medium text-muted-foreground whitespace-nowrap">
+                              {label}:
+                            </span>
+                            <span className="font-medium text-foreground whitespace-nowrap">
+                              {value}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Grid metadata */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-secondary/30 rounded-xl px-5 py-4 mb-6 text-sm">
+                    {[
+                      {
+                        icon: <Users className="size-4" />,
+                        label: "Ứng viên",
+                        value: `${selectedJob.applicants} người`,
+                      },
+                      {
+                        icon: <Eye className="size-4" />,
+                        label: "Lượt xem",
+                        value: selectedJob.views || 0,
+                      },
+
+                      {
+                        icon: <CalendarDays className="size-4" />,
+                        label: "Ngày đăng",
+                        value: formatDateVN(selectedJob.postedDate),
+                      },
+                      {
+                        icon: <CalendarDays className="size-4" />,
+                        label: "Ngày hết hạn",
+                        value: selectedJob.deadline
+                          ? formatDateVN(selectedJob.deadline)
+                          : "—",
+                      },
+                    ].map(({ icon, label, value }) => (
+                      <div key={label}>
+                        <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 mb-1">
+                          {icon} {label}
+                        </p>
+                        <p className="font-medium text-foreground text-[14px]">
+                          {value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Mô tả công việc */}
+                  {desc && (
+                    <div className="mb-5">
+                      <h4 className="font-['Open_Sans'] text-base font-semibold border-l-[3px] border-primary pl-3 mb-3">
+                        Mô tả công việc
+                      </h4>
+                      <div
+                        className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-bold [&_p]:my-2 [&_li]:mb-1 [&_ol]:list-outside [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-outside [&_ul]:list-disc [&_ul]:pl-5 [&_strong]:font-bold [&_b]:font-bold"
+                        dangerouslySetInnerHTML={{ __html: desc }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Yêu cầu ứng viên */}
+                  {selectedJob.requirements && (
+                    <div className="mb-5">
+                      <h4 className="font-['Open_Sans'] text-base font-semibold border-l-[3px] border-primary pl-3 mb-3">
+                        Yêu cầu ứng viên
+                      </h4>
+                      <div
+                        className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-bold [&_p]:my-2 [&_li]:mb-1 [&_ol]:list-outside [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-outside [&_ul]:list-disc [&_ul]:pl-5 [&_strong]:font-bold [&_b]:font-bold"
+                        dangerouslySetInnerHTML={{
+                          __html: selectedJob.requirements,
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Quyền lợi ứng viên */}
+                  {selectedJob.benefits && (
+                    <div className="mb-5">
+                      <h4 className="font-['Open_Sans'] text-base font-semibold border-l-[3px] border-primary pl-3 mb-3">
+                        Quyền lợi ứng viên
+                      </h4>
+                      <div
+                        className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-bold [&_p]:my-2 [&_li]:mb-1 [&_ol]:list-outside [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-outside [&_ul]:list-disc [&_ul]:pl-5 [&_strong]:font-bold [&_b]:font-bold"
+                        dangerouslySetInnerHTML={{
+                          __html: selectedJob.benefits,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
         </RecruiterModal>
 
         <RecruiterModal

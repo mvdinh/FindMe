@@ -40,16 +40,13 @@ router.get('/', auth, authorize('recruiter', 'admin'), requireCompany, [query('p
   max: 100
 }).withMessage('Department must be between 1 and 100 characters'), query('employmentType').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance']).withMessage('Invalid employment type'), query('sortBy').optional().isIn(['createdAt', 'title', 'department', 'applicants']).withMessage('Invalid sort field'), query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc')], getJobs);
 
-router.post('/', auth, authorize('recruiter', 'admin'), requireCompany, [body('title').notEmpty().withMessage('Job title is required').isLength({
+router.post('/', auth, authorize('recruiter', 'admin'), requireCompany, [body('title').optional().isLength({
   min: 3,
   max: 200
-}).withMessage('Job title must be between 3 and 200 characters'), body('description').notEmpty().withMessage('Job description is required').isLength({
+}).withMessage('Job title must be between 3 and 200 characters'), body('description').optional().isLength({
   min: 10,
   max: 5000
-}).withMessage('Job description must be between 10 and 5000 characters'), body('department').notEmpty().withMessage('Department is required').isLength({
-  min: 2,
-  max: 100
-}).withMessage('Department must be between 2 and 100 characters'), body('jobType').custom(value => ALLOWED_JOB_TYPES.includes(value)).withMessage('Invalid job type'), body('locationType').optional().isIn(['Onsite', 'Remote', 'Hybrid']).withMessage('Invalid location type'), body('qualification').notEmpty().withMessage('Required qualification is required'), body('experienceLevel').isIn(['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director']).withMessage('Experience level is required and must be valid'), body('applicationDeadline').isISO8601().withMessage('Application deadline must be a valid date').custom(value => {
+}).withMessage('Job description must be between 10 and 5000 characters'), body('jobType').optional().custom(value => ALLOWED_JOB_TYPES.includes(value)).withMessage('Invalid job type'), body('locationType').optional().isIn(['Onsite', 'Remote', 'Hybrid']).withMessage('Invalid location type'), body('qualification').optional().notEmpty().withMessage('Required qualification is required'), body('experienceLevel').optional().isIn(['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director']).withMessage('Experience level is required and must be valid'), body('applicationDeadline').optional().isISO8601().withMessage('Application deadline must be a valid date').custom(value => {
   if (new Date(value) <= new Date()) {
     throw new Error('Application deadline must be in the future');
   }
@@ -96,10 +93,7 @@ router.put('/:id', auth, authorize('recruiter', 'admin'), requireCompany, [param
 }).withMessage('Job title must be between 3 and 200 characters'), body('description').optional().isLength({
   min: 50,
   max: 5000
-}).withMessage('Job description must be between 50 and 5000 characters'), body('department').optional().isLength({
-  min: 2,
-  max: 100
-}).withMessage('Department must be between 2 and 100 characters'), body('jobType').optional().custom(value => ALLOWED_JOB_TYPES.includes(value)).withMessage('Invalid job type'), body('location').optional().isLength({
+}).withMessage('Job description must be between 50 and 5000 characters'), body('jobType').optional().custom(value => ALLOWED_JOB_TYPES.includes(value)).withMessage('Invalid job type'), body('location').optional().isLength({
   min: 2,
   max: 200
 }).withMessage('Location must be between 2 and 200 characters'), body('experienceLevel').optional().isIn(['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director']).withMessage('Invalid experience level'), body('status').optional().isIn(['active', 'closed', 'draft']).withMessage('Invalid status'), body('applicationDeadline').optional().isISO8601().withMessage('Application deadline must be a valid date'), body('atsEnabled').optional().isBoolean().withMessage('atsEnabled must be boolean'), body('atsResumeThreshold').optional().isFloat({

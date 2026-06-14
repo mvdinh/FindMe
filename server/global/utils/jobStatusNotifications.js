@@ -34,22 +34,7 @@ async function notifyActorAndPeerRoleOnStatusChange({
       : "Người dùng";
     const newL = statusLabel(newStatus);
     const selfPath = ar === "admin" ? "/admin/jobs" : "/recruiter/jobs";
-    if (ar !== "admin") {
-      await createAndEmit({
-        toUserId: actorUserId,
-        toRole: ar,
-        type: "job",
-        title: "Đã cập nhật trạng thái tin",
-        message: `Bạn đã đổi "${jobTitle}" sang: ${newL}.`,
-        actionUrl: selfPath,
-        entity: {
-          kind: "job",
-          id: jobId,
-        },
-        priority: "low",
-        createdBy: actorUserId,
-      });
-    }
+
     const peerRole = ar === "recruiter" ? "admin" : "recruiter";
     const peerTitle =
       ar === "recruiter"

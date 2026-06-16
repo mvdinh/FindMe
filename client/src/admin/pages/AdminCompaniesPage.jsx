@@ -37,8 +37,9 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 const STATUS_TABS = [
   { key: "", label: "Tất cả" },
   { key: "pending", label: "Chờ duyệt", color: "text-amber-600" },
+  { key: "approved", label: "Đã phê duyệt", color: "text-emerald-600" },
   { key: "rejected", label: "Bị từ chối", color: "text-red-600" },
-  { key: "locked", label: "Bị khóa", color: "text-gray-600" },
+  { key: "locked", label: "Bị khóa", color: "text-red-600" },
 ];
 
 const statusBadge = (status) => {
@@ -47,13 +48,17 @@ const statusBadge = (status) => {
       label: "Chờ duyệt",
       cls: "bg-amber-100 text-amber-800 border-amber-200",
     },
+    approved: {
+      label: "Đã phê duyệt",
+      cls: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    },
     rejected: {
       label: "Bị từ chối",
       cls: "bg-red-100 text-red-800 border-red-200",
     },
     locked: {
       label: "Bị khóa",
-      cls: "bg-gray-200 text-gray-700 border-gray-300",
+      cls: "bg-red-100 text-red-800 border-red-200",
     },
   };
   const m = map[status] || {

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 const Job = require('../../global/models/Job');
 const Application = require('../../global/models/Application');
 const User = require('../../global/models/User');
@@ -13,10 +13,10 @@ const {
   statusLabel
 } = require('../../global/utils/jobStatusNotifications');
 /**
- * Hàm phụ trợ: Chuẩn hóa dữ liệu của một tin tuyển dụng (Job) trước khi trả về.
- * Xử lý định dạng mức lương (thêm dấu phẩy, đuôi VNĐ/USD), tên người đăng và các chỉ số thống kê ứng viên.
- * @param {Object} job - Document của tin tuyển dụng.
- * @param {Object} metrics - Dữ liệu thống kê số lượng ứng viên theo trạng thái.
+ * H├ám phß╗Ñ trß╗ú: Chuß║⌐n h├│a dß╗» liß╗çu cß╗ºa mß╗Öt tin tuyß╗ân dß╗Ñng (Job) tr╞░ß╗¢c khi trß║ú vß╗ü.
+ * Xß╗¡ l├╜ ─æß╗ïnh dß║íng mß╗⌐c l╞░╞íng (th├¬m dß║Ñu phß║⌐y, ─æu├┤i VN─É/USD), t├¬n ng╞░ß╗¥i ─æ─âng v├á c├íc chß╗ë sß╗æ thß╗æng k├¬ ß╗⌐ng vi├¬n.
+ * @param {Object} job - Document cß╗ºa tin tuyß╗ân dß╗Ñng.
+ * @param {Object} metrics - Dß╗» liß╗çu thß╗æng k├¬ sß╗æ l╞░ß╗úng ß╗⌐ng vi├¬n theo trß║íng th├íi.
  */
 const formatJob = (job, metrics = {}) => {
   const postedBy = job.postedByObj ? `${job.postedByObj.lastName} ${job.postedByObj.firstName}`.trim() : 'Unknown';
@@ -30,16 +30,16 @@ const formatJob = (job, metrics = {}) => {
   };
   const minF = formatVal(salaryMin);
   const maxF = formatVal(salaryMax);
-  const suffix = currency === 'VND' ? ' VNĐ' : ` ${currency}`;
+  const suffix = currency === 'VND' ? ' VN─É' : ` ${currency}`;
   let salary = 'N/A';
   if (minF && maxF) salary = `${minF} - ${maxF}${suffix}`;
   else if (minF) salary = `${minF}${suffix}+`;
-  else if (maxF) salary = `Tối đa ${maxF}${suffix}`;
+  else if (maxF) salary = `Tß╗æi ─æa ${maxF}${suffix}`;
   const posterId = job.postedByObj?._id != null ? String(job.postedByObj._id) : job.postedBy && typeof job.postedBy === 'object' && job.postedBy._id != null ? String(job.postedBy._id) : null;
   return {
     id: job._id,
     title: job.title,
-    company: job.company?.name || 'Chưa cập nhật',
+    company: job.company?.name || 'Ch╞░a cß║¡p nhß║¡t',
     department: job.department,
     location: job.location || 'N/A',
     type: job.jobType,
@@ -56,10 +56,10 @@ const formatJob = (job, metrics = {}) => {
   };
 };
 /**
- * API Endpoint: Lấy danh sách toàn bộ các tin tuyển dụng trên hệ thống (dành cho Admin).
- * - Hỗ trợ lọc theo trạng thái, phòng ban, loại công việc, thời gian tạo, người đăng.
- * - Tìm kiếm theo từ khóa (regex) trên tiêu đề, phòng ban, địa điểm.
- * - Hỗ trợ phân trang, sắp xếp và đếm số lượng hồ sơ ứng tuyển (tổng số, lịch phỏng vấn, đậu phỏng vấn, đã tuyển).
+ * API Endpoint: Lß║Ñy danh s├ích to├án bß╗Ö c├íc tin tuyß╗ân dß╗Ñng tr├¬n hß╗ç thß╗æng (d├ánh cho Admin).
+ * - Hß╗ù trß╗ú lß╗ìc theo trß║íng th├íi, ph├▓ng ban, loß║íi c├┤ng viß╗çc, thß╗¥i gian tß║ío, ng╞░ß╗¥i ─æ─âng.
+ * - T├¼m kiß║┐m theo tß╗½ kh├│a (regex) tr├¬n ti├¬u ─æß╗ü, ph├▓ng ban, ─æß╗ïa ─æiß╗âm.
+ * - Hß╗ù trß╗ú ph├ón trang, sß║»p xß║┐p v├á ─æß║┐m sß╗æ l╞░ß╗úng hß╗ô s╞í ß╗⌐ng tuyß╗ân (tß╗òng sß╗æ, lß╗ïch phß╗Ång vß║Ñn, ─æß║¡u phß╗Ång vß║Ñn, ─æ├ú tuyß╗ân).
  */
 const getAllJobs = async (req, res) => {
   try {
@@ -80,11 +80,7 @@ const getAllJobs = async (req, res) => {
     const numericPage = Math.max(parseInt(page) || 1, 1);
     const numericLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
     const filter = {};
-    if (status && status !== 'all') {
-      filter.status = status;
-    } else {
-      filter.status = { $ne: 'draft' };
-    }
+    if (status && ['active', 'closed', 'draft'].includes(status)) filter.status = status;
     if (department && department !== 'all') filter.department = department;
     if (jobType && jobType !== 'all') filter.jobType = jobType;
     if (fromDate || toDate) {
@@ -238,10 +234,10 @@ const getAllJobs = async (req, res) => {
   }
 };
 /**
- * API Endpoint: Cập nhật trạng thái của một tin tuyển dụng (active, inactive, closed, v.v.).
- * - Admin cập nhật trạng thái trực tiếp mà không cần duyệt.
- * - Tự động đánh dấu các "Yêu cầu thay đổi trạng thái" (JobStatusChangeRequest) đang pending của tin này thành approved.
- * - Bắn thông báo (notification) cho người tạo tin (HR) và các HR khác.
+ * API Endpoint: Cß║¡p nhß║¡t trß║íng th├íi cß╗ºa mß╗Öt tin tuyß╗ân dß╗Ñng (active, inactive, closed, v.v.).
+ * - Admin cß║¡p nhß║¡t trß║íng th├íi trß╗▒c tiß║┐p m├á kh├┤ng cß║ºn duyß╗çt.
+ * - Tß╗▒ ─æß╗Öng ─æ├ính dß║Ñu c├íc "Y├¬u cß║ºu thay ─æß╗òi trß║íng th├íi" (JobStatusChangeRequest) ─æang pending cß╗ºa tin n├áy th├ánh approved.
+ * - Bß║»n th├┤ng b├ío (notification) cho ng╞░ß╗¥i tß║ío tin (HR) v├á c├íc HR kh├íc.
  */
 const updateJobStatus = async (req, res) => {
   try {
@@ -251,7 +247,7 @@ const updateJobStatus = async (req, res) => {
     const {
       status
     } = req.body;
-    const allowed = ['active', 'closed', 'draft', 'pending_approval', 'rejected'];
+    const allowed = ['active', 'closed', 'draft'];
     if (!allowed.includes(status)) return res.status(400).json({
       error: 'Invalid status value'
     });
@@ -259,7 +255,7 @@ const updateJobStatus = async (req, res) => {
       path: 'postedBy',
       select: 'firstName lastName',
       model: User
-    }).populate('company', 'name');
+    });
     if (!job) return res.status(404).json({
       error: 'Job not found'
     });
@@ -280,7 +276,7 @@ const updateJobStatus = async (req, res) => {
           $set: {
             reviewStatus: 'approved',
             reviewedBy: req.user.id,
-            reviewNote: `Thay đổi trạng thái trực tiếp sang ${status} bởi quản trị viên.`
+            reviewNote: `Thay ─æß╗òi trß║íng th├íi trß╗▒c tiß║┐p sang ${status} bß╗ƒi quß║ún trß╗ï vi├¬n.`
           }
         }
       );
@@ -332,9 +328,9 @@ const updateJobStatus = async (req, res) => {
   }
 };
 /**
- * API Endpoint: Lấy chi tiết thông tin của một tin tuyển dụng cụ thể (Admin view).
- * - Populate thông tin của người đăng (HR).
- * - Tính toán thống kê lượng hồ sơ nộp vào theo từng trạng thái để làm biểu đồ/báo cáo.
+ * API Endpoint: Lß║Ñy chi tiß║┐t th├┤ng tin cß╗ºa mß╗Öt tin tuyß╗ân dß╗Ñng cß╗Ñ thß╗â (Admin view).
+ * - Populate th├┤ng tin cß╗ºa ng╞░ß╗¥i ─æ─âng (HR).
+ * - T├¡nh to├ín thß╗æng k├¬ l╞░ß╗úng hß╗ô s╞í nß╗Öp v├áo theo tß╗½ng trß║íng th├íi ─æß╗â l├ám biß╗âu ─æß╗ô/b├ío c├ío.
  */
 const getJobDetail = async (req, res) => {
   try {
@@ -345,7 +341,7 @@ const getJobDetail = async (req, res) => {
       path: 'postedBy',
       select: 'firstName lastName email',
       model: User
-    }).populate('company', 'name').lean();
+    }).lean();
     if (!job) return res.status(404).json({
       error: 'Job not found'
     });
@@ -377,10 +373,10 @@ const getJobDetail = async (req, res) => {
   }
 };
 /**
- * API Endpoint: Cập nhật trạng thái hàng loạt cho nhiều tin tuyển dụng cùng lúc (Bulk Update).
- * - Tương tự như updateJobStatus nhưng áp dụng cho nhiều jobIds.
- * - Tự động duyệt các yêu cầu pending của các job này.
- * - Gửi một thông báo tổng hợp duy nhất cho toàn bộ nhóm HR để tránh spam thông báo.
+ * API Endpoint: Cß║¡p nhß║¡t trß║íng th├íi h├áng loß║ít cho nhiß╗üu tin tuyß╗ân dß╗Ñng c├╣ng l├║c (Bulk Update).
+ * - T╞░╞íng tß╗▒ nh╞░ updateJobStatus nh╞░ng ├íp dß╗Ñng cho nhiß╗üu jobIds.
+ * - Tß╗▒ ─æß╗Öng duyß╗çt c├íc y├¬u cß║ºu pending cß╗ºa c├íc job n├áy.
+ * - Gß╗¡i mß╗Öt th├┤ng b├ío tß╗òng hß╗úp duy nhß║Ñt cho to├án bß╗Ö nh├│m HR ─æß╗â tr├ính spam th├┤ng b├ío.
  */
 const bulkUpdateStatus = async (req, res) => {
   try {
@@ -391,7 +387,7 @@ const bulkUpdateStatus = async (req, res) => {
     if (!Array.isArray(jobIds) || jobIds.length === 0) return res.status(400).json({
       error: 'jobIds array required'
     });
-    const allowed = ['active', 'closed', 'draft', 'pending_approval', 'rejected'];
+    const allowed = ['active', 'closed', 'draft'];
     if (!allowed.includes(status)) return res.status(400).json({
       error: 'Invalid status value'
     });
@@ -413,7 +409,7 @@ const bulkUpdateStatus = async (req, res) => {
           $set: {
             reviewStatus: 'approved',
             reviewedBy: req.user.id,
-            reviewNote: `Thay đổi trạng thái hàng loạt sang ${status} bởi quản trị viên.`
+            reviewNote: `Thay ─æß╗òi trß║íng th├íi h├áng loß║ít sang ${status} bß╗ƒi quß║ún trß╗ï vi├¬n.`
           }
         }
       );
@@ -424,13 +420,13 @@ const bulkUpdateStatus = async (req, res) => {
       const n = result.modifiedCount;
       const sl = statusLabel(status);
       const adminUser = await User.findById(req.user.id).select('firstName lastName').lean();
-      const adminName = adminUser ? `${adminUser.firstName || ''} ${adminUser.lastName || ''}`.trim() || 'Quản trị viên' : 'Quản trị viên';
+      const adminName = adminUser ? `${adminUser.firstName || ''} ${adminUser.lastName || ''}`.trim() || 'Quß║ún trß╗ï vi├¬n' : 'Quß║ún trß╗ï vi├¬n';
       await createAndEmit({
         toUserId: req.user.id,
         toRole: 'admin',
         type: 'job',
-        title: 'Đã cập nhật trạng thái hàng loạt',
-        message: `Bạn đã đổi ${n} tin sang ${sl}.`,
+        title: '─É├ú cß║¡p nhß║¡t trß║íng th├íi h├áng loß║ít',
+        message: `Bß║ín ─æ├ú ─æß╗òi ${n} tin sang ${sl}.`,
         actionUrl: '/admin/jobs',
         priority: 'low',
         createdBy: req.user.id
@@ -438,8 +434,8 @@ const bulkUpdateStatus = async (req, res) => {
       // Single-tenant: broadcast by role (no company scoping)
       await broadcastToRole('hr', {
         type: 'job',
-        title: 'Admin cập nhật trạng thái hàng loạt',
-        message: `${adminName} đã đổi ${n} tin tuyển dụng sang ${sl}.`,
+        title: 'Admin cß║¡p nhß║¡t trß║íng th├íi h├áng loß║ít',
+        message: `${adminName} ─æ├ú ─æß╗òi ${n} tin tuyß╗ân dß╗Ñng sang ${sl}.`,
         actionUrl: '/hr/jobs',
         priority: 'medium',
         createdBy: req.user.id

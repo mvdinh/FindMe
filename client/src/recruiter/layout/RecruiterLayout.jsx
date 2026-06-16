@@ -9,6 +9,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Menu, AlertCircle, Clock } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import RecruiterCompanySetup from "../components/RecruiterCompanySetup";
 
 const RecruiterLayout = ({ children }) => {
@@ -16,6 +17,7 @@ const RecruiterLayout = ({ children }) => {
   const { apiRequest } = useAuth();
   const [company, setCompany] = useState(null);
   const [loadingCompany, setLoadingCompany] = useState(true);
+  const navigate = useNavigate();
 
   const [isSettingUpCompany, setIsSettingUpCompany] = useState(false);
 
@@ -49,14 +51,6 @@ const RecruiterLayout = ({ children }) => {
       unlockRecruiterBodyScroll();
     };
   }, [mobileDrawerOpen]);
-
-  if (loadingCompany) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background md:flex-row md:h-screen transition-colors duration-300">
@@ -98,8 +92,10 @@ const RecruiterLayout = ({ children }) => {
             />
           ) : (
             <>
-              {!company && (
-                <Alert className="m-4 bg-blue-50 border-blue-200 text-blue-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              {(!loadingCompany && !company) || (company && company.verificationStatus !== 'approved') ? (
+                <div className="max-w-7xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-6 md:pt-8 pb-0">
+                  {!loadingCompany && !company && (
+                  <Alert className="mb-4 bg-blue-50 border-blue-200 text-blue-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div className="flex gap-3">
                     <AlertCircle className="size-5 text-blue-600 mt-0.5 shrink-0" />
                     <div>
@@ -113,7 +109,7 @@ const RecruiterLayout = ({ children }) => {
                     </div>
                   </div>
                   <Button
-                    onClick={() => setIsSettingUpCompany(true)}
+                    onClick={() => navigate("/recruiter/profile?tab=company")}
                     className="bg-blue-600 hover:bg-blue-700 text-white shrink-0 w-full sm:w-auto"
                   >
                     Thiết lập ngay
@@ -122,7 +118,7 @@ const RecruiterLayout = ({ children }) => {
               )}
 
               {company?.verificationStatus === "pending" && (
-                <Alert className="m-4 bg-amber-50 border-amber-200 text-amber-800">
+                <Alert className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
                   <Clock className="size-4 text-amber-600" />
                   <AlertTitle>Đang chờ duyệt doanh nghiệp</AlertTitle>
                   <AlertDescription>
@@ -133,7 +129,7 @@ const RecruiterLayout = ({ children }) => {
               )}
 
               {company?.verificationStatus === "rejected" && (
-                <Alert variant="destructive" className="m-4">
+                <Alert variant="destructive" className="mb-4">
                   <AlertCircle className="size-4" />
                   <AlertTitle>Đăng ký doanh nghiệp bị từ chối</AlertTitle>
                   <AlertDescription>
@@ -151,7 +147,7 @@ const RecruiterLayout = ({ children }) => {
               )}
 
               {company?.verificationStatus === "locked" && (
-                <Alert className="m-4 bg-red-50 border-red-300 text-red-900">
+                <Alert className="mb-4 bg-red-50 border-red-300 text-red-900">
                   <AlertCircle className="size-4 text-red-600" />
                   <AlertTitle className="text-red-900 font-bold">
                     Tài khoản doanh nghiệp bị khóa
@@ -170,6 +166,9 @@ const RecruiterLayout = ({ children }) => {
                   </AlertDescription>
                 </Alert>
               )}
+
+                </div>
+              ) : null}
 
               {children}
             </>

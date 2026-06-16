@@ -73,7 +73,7 @@ const CompaniesPage = () => {
   }, [fetchCompanies]);
 
   const handleCompanyClick = (companyId) => {
-    // navigate(`/companies/${companyId}`);
+    navigate(`/companies/${companyId}`);
   };
 
   return (

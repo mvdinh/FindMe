@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationsContext';
@@ -19,11 +19,38 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [navActive, setNavActive] = useState(() => (typeof window !== 'undefined' && window.location.pathname.startsWith('/jobs') ? 'jobs' : null));
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  const [navActive, setNavActive] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    const path = window.location.pathname;
+    if (path.startsWith('/jobs')) return 'jobs';
+    if (path.startsWith('/companies')) return 'companies';
+    if (path.startsWith('/applicant/applications')) return 'applications';
+    if (path.startsWith('/saved-jobs') || path.startsWith('/applicant/saved-jobs')) return 'saved-jobs';
+    return null;
+  });
   const location = useLocation();
   useLayoutEffect(() => {
     if (location.pathname !== '/') {
-      setNavActive(location.pathname.startsWith('/jobs') ? 'jobs' : null);
+      const path = location.pathname;
+      if (path.startsWith('/jobs')) setNavActive('jobs');
+      else if (path.startsWith('/companies')) setNavActive('companies');
+      else if (path.startsWith('/applicant/applications')) setNavActive('applications');
+      else if (path.startsWith('/saved-jobs') || path.startsWith('/applicant/saved-jobs')) setNavActive('saved-jobs');
+      else setNavActive(null);
       return;
     }
     setNavActive(getHomeNavActiveKey());
@@ -116,20 +143,20 @@ const Navbar = () => {
             <div className="hidden lg:block h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
 
             <div className="hidden md:flex items-center gap-3">
-              <ThemeToggle className="shrink-0" />
+             
               {user ? (
                 <div className="flex items-center gap-3">
                   {/* Notifications Bell with Dropdown */}
                   <NotificationDropdown />
 
-                  {/* Messages Chat Icon */}
-                  <Link to="/messages" className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                    <MessageSquare className="w-5 h-5" />
-                  </Link>
+                  
 
                   {/* Avatar with Dropdown */}
-                  <div className="relative group">
-                    <button className="flex items-center gap-1 focus:outline-none py-1">
+                  <div className="relative" ref={dropdownRef}>
+                    <button 
+                      onClick={() => setIsProfileDropdownOpen(prev => !prev)}
+                      className="flex items-center gap-1 focus:outline-none py-1"
+                    >
                       <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 ring-1 ring-border flex items-center justify-center">
                         {user.profilePicture || user.avatar ? (
                           <img src={user.profilePicture || user.avatar} alt="Avatar" className="h-full w-full object-cover" />
@@ -137,32 +164,32 @@ const Navbar = () => {
                           <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                         )}
                       </div>
-                      <ChevronDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                   
                     </button>
 
                     {/* Dropdown Menu */}
-                    <div className="absolute right-0 mt-1.5 w-48 rounded-lg bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 py-1 hidden group-hover:block transition-all z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                    <div className={`absolute right-0 mt-1.5 w-56 rounded-lg bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 py-1 transition-all z-50 ${isProfileDropdownOpen ? 'block' : 'hidden'}`}>
+                      <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
                           {user.lastName ? `${user.lastName} ${user.firstName}` : 'Người dùng'}
                         </p>
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                           {user.email}
                         </p>
                       </div>
-                      <Link to="/profile" className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <Link to="/profile" onClick={() => setIsProfileDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                         Thông tin cá nhân
                       </Link>
-                      <Link to="/resumes" className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <Link to="/resumes" onClick={() => setIsProfileDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                         CV của tôi
                       </Link>
-                      <Link to="/applicant/applications" className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <Link to="/applicant/applications" onClick={() => setIsProfileDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                         Hồ sơ ứng tuyển
                       </Link>
-                      <Link to="/change-password" className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <Link to="/change-password" onClick={() => setIsProfileDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                         Đổi mật khẩu
                       </Link>
-                      <button onClick={() => { logout(); navigate('/login'); }} className="w-full text-left block px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <button onClick={() => { setIsProfileDropdownOpen(false); logout(); navigate('/login'); }} className="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                         Đăng xuất
                       </button>
                     </div>

@@ -41,7 +41,7 @@ const LoginPage = () => {
       }
       switch (user.role) {
         case "admin":
-          navigate("/admin/dashboard");
+          navigate("/admin/companies");
           break;
         case "applicant":
           navigate(from, { replace: true });

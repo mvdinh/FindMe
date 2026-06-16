@@ -19,11 +19,6 @@ const jobSchema = new mongoose.Schema({
     type: String,
     maxlength: [5000, 'Benefits description cannot be more than 5000 characters']
   },
-  department: {
-    type: String,
-    trim: true,
-    default: 'Khác'
-  },
   jobType: {
     type: String,
     enum: ['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance'],
@@ -68,14 +63,6 @@ const jobSchema = new mongoose.Schema({
     type: String,
     enum: ['Fresher', 'Junior', 'Middle', 'Senior', 'Tech Lead', 'Manager', 'Director'],
     required: [function() { return this.status !== 'draft'; }, 'Experience level is required']
-  },
-  requiredSkills: {
-    type: [String],
-    default: []
-  },
-  preferredSkills: {
-    type: [String],
-    default: []
   },
   applicationDeadline: {
     type: Date,
@@ -175,9 +162,7 @@ jobSchema.index({
 jobSchema.index({
   postedBy: 1
 });
-jobSchema.index({
-  department: 1
-});
+
 jobSchema.virtual('daysSincePosted').get(function () {
   const diffTime = Math.abs(new Date() - this.createdAt);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

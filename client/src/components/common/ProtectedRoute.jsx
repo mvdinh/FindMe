@@ -16,7 +16,9 @@ const ProtectedRoute = ({
     return null;
   }
   if (!isAuthenticated()) {
-    return <Navigate to="/login" state={{
+    const isRecruiterPath = location.pathname.startsWith('/recruiter') || location.pathname.startsWith('/admin');
+    const redirectPath = isRecruiterPath ? '/tuyen-dung' : '/login';
+    return <Navigate to={redirectPath} state={{
       from: location
     }} replace />;
   }

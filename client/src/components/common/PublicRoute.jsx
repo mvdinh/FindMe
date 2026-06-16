@@ -16,6 +16,17 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated()) {
+    // If the logged-in user is an applicant, allow them to access recruiter authentication and related pages
+    // (so they can register or log in as a recruiter which will overwrite their session).
+    const path = window.location.pathname.toLowerCase();
+    const isRecruiterOrAuthHelperPath = 
+      path === '/tuyen-dung' || 
+      path === '/verify-email' || 
+      path === '/forgot-password';
+
+    if (user?.role === 'applicant' && isRecruiterOrAuthHelperPath) {
+      return children;
+    }
     return <Navigate to={getDashboardPathByRole(user?.role)} replace />;
   }
 

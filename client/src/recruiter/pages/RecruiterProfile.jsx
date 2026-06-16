@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import RecruiterLayout from "../layout/RecruiterLayout";
 import {
   HR_PAGE,
@@ -35,8 +36,12 @@ const RecruiterProfile = () => {
   const toast = useToast();
   const { user, updateUser } = useAuth();
   const { makeJsonRequest } = useApiRequest();
+  const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState("personal"); // 'personal', 'company', 'password'
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get("tab") || "personal";
+
+  const [activeTab, setActiveTab] = useState(initialTab); // 'personal', 'company', 'password'
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);

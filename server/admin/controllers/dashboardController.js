@@ -31,7 +31,7 @@ exports.getOverview = async (req, res) => {
     const months = Math.min(Math.max(parseInt(req.query.months) || 6, 1), 24);
     const monthKeys = getLastMonths(months);
     const monthKeySet = new Set(monthKeys);
-    const jobsFilter = {};
+    const jobsFilter = { status: { $ne: 'draft' } };
     const usersFilter = {};
     const jobs = await Job.find(jobsFilter).select('_id createdAt status').lean();
     const jobIds = jobs.map(j => j._id);
@@ -147,7 +147,7 @@ exports.getOverview = async (req, res) => {
     }).sort({
       updatedAt: -1
     }).limit(5).select('status createdAt updatedAt').lean(), User.find({
-      role: 'hr'
+      role: 'recruiter'
     }).sort({
       createdAt: -1
     }).limit(5).select('firstName lastName role createdAt').lean()]);
@@ -162,7 +162,7 @@ exports.getOverview = async (req, res) => {
       time: a.updatedAt || a.createdAt
     })), ...recentNewUsers.map(u => ({
       type: 'hr_added',
-      message: `HR mới: ${u.lastName} ${u.firstName}`.trim(),
+      message: `Nhà tuyển dụng mới: ${u.lastName} ${u.firstName}`.trim(),
       time: u.createdAt
     }))].sort((a, b) => b.time - a.time).slice(0, 12);
     const interviewScheduledCandidates = await Application.countDocuments({
@@ -183,7 +183,7 @@ exports.getOverview = async (req, res) => {
       stats: {
         totalJobs: jobs.length,
         totalCandidates: distinctApplicants.length,
-        totalHRs: roleCounts.hr || 0,
+        totalHRs: roleCounts.recruiter || 0,
         selectedCandidates,
         interviewScheduledCandidates,
         interviewPassedCandidates,

@@ -9,6 +9,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Heart, Trash2, Loader2 } from 'lucide-react';
 import { formatDateVN } from "@/utils/dateFormat";
+import { getApiUrl } from "../../utils/api";
+import { cn } from "@/lib/utils";
 
 const SavedJobsPage = () => {
   const navigate = useNavigate();
@@ -117,8 +119,8 @@ const SavedJobsPage = () => {
         </div>
 
         {loading && (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, index) => (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[...Array(6)].map((_, index) => (
               <Card key={index} className="shadow-sm">
                 <CardContent className="space-y-3 p-6">
                   <Skeleton className="h-5 w-3/4 max-w-md" />
@@ -147,71 +149,120 @@ const SavedJobsPage = () => {
         )}
 
         {!loading && !error && (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {savedJobs.length > 0 ? (
               savedJobs.map(job => (
                 <Card
                   key={job.id}
-                  className="cursor-pointer shadow-sm transition-shadow hover:shadow-md"
+                  className="cursor-pointer shadow-sm transition-all hover:ring-red-500 hover:shadow-md flex flex-col group h-full"
                   onClick={() => handleJobClick(job.id)}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-                          <h3 className="font-['Open_Sans'] text-lg font-semibold text-foreground">{job.title}</h3>
-                          <div className="flex shrink-0 items-center gap-1 font-['Roboto'] text-sm text-muted-foreground">
-                            <Heart className="size-4 fill-primary text-primary" aria-hidden />
-                            Đã lưu {formatDate(job.savedAt)}
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <p className="font-['Roboto'] text-sm text-muted-foreground">Đăng {formatDate(job.postedDate)}</p>
-                          <p className="font-['Roboto'] text-sm text-muted-foreground">
-                            {job.location} • {job.workType}
-                          </p>
-                          <p className="font-['Roboto'] text-sm text-muted-foreground">
-                            {job.jobType} • {job.experience} • {job.salary}
-                          </p>
-                        </div>
+                  <CardContent className="p-3 flex items-start gap-3 sm:gap-4 h-full">
+                    {/* Logo Section */}
+                    <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg border border-gray-200 p-1 flex items-center justify-center overflow-hidden bg-white">
+                      {(() => {
+                        const hasLogo =
+                          job.companyLogo ||
+                          (job.company && job.company.logo);
+                        const rawLogo =
+                          job.companyLogo || job.company?.logo;
+                        const logoSrc =
+                          rawLogo && rawLogo.startsWith("/uploads/")
+                            ? `${getApiUrl()}${rawLogo}`
+                            : rawLogo;
+                        return hasLogo ? (
+                          <img
+                            src={logoSrc}
+                            alt={`${(typeof job.company === "string" ? job.company : job.company?.name) || "Company"} logo`}
+                            className="w-full h-full object-contain"
+                            onLoad={(e) => {
+                              e.target.style.display = "block";
+                              const fallback = e.target.parentElement.querySelector(".logo-fallback");
+                              if (fallback) fallback.style.display = "none";
+                            }}
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                              const fallback =
+                                e.target.parentElement.querySelector(
+                                  ".logo-fallback",
+                                );
+                              if (fallback)
+                                fallback.style.display = "flex";
+                            }}
+                          />
+                        ) : null;
+                      })()}
+                      <div
+                        className={cn(
+                          "logo-fallback flex h-full w-full items-center justify-center text-lg font-bold text-gray-400 bg-gray-50 rounded-md",
+                          job.companyLogo ||
+                            (job.company && job.company.logo)
+                            ? "hidden"
+                            : "flex",
+                        )}
+                      >
+                        {(
+                          (typeof job.company === "string"
+                            ? job.company
+                            : job.company?.name) || "Company"
+                        )
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                    </div>
+                    
+                    {/* Right Content Section */}
+                    <div className="flex flex-col flex-1 min-w-0 h-full justify-between py-0.5">
+                      <div className="mb-2">
+                        <h3 className="font-['Open_Sans'] text-lg sm:text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug mb-1">
+                          {job.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 truncate font-['Roboto']">
+                          {typeof job.company === "string" ? job.company : job.company?.name || "Company"}
+                        </p>
                       </div>
 
-                      <div className="flex shrink-0 flex-wrap items-center gap-2 sm:ml-4 sm:flex-col sm:items-stretch md:flex-row md:items-center">
-                        <Button
-                          type="button"
-                          className="min-h-11 touch-manipulation font-['Roboto']"
-                          onClick={e => handleApply(e, job.id)}
-                        >
-                          Ứng tuyển
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="min-h-11 touch-manipulation gap-1 font-['Roboto']"
-                          onClick={e => handleRemoveFromSaved(e, job.id)}
-                          disabled={removingJobId === job.id}
-                          title="Bỏ lưu"
-                        >
-                          {removingJobId === job.id ? (
-                            <>
-                              <Loader2 className="size-4 animate-spin" />
-                              Đang xóa...
-                            </>
-                          ) : (
-                            <>
-                              <Trash2 className="size-4" />
-                              Bỏ lưu
-                            </>
-                          )}
-                        </Button>
+                      <div className="flex flex-col gap-2 mt-auto">
+                        <div className="flex items-center gap-2 overflow-hidden pr-2">
+                          <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs sm:text-sm rounded-md font-medium whitespace-nowrap font-['Roboto']">
+                            {job.salary}
+                          </span>
+                          <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs sm:text-sm rounded-md font-medium whitespace-nowrap truncate font-['Roboto']">
+                            {job.location}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mt-1">
+                          <Button
+                            type="button"
+                            className="flex-1 h-8 sm:h-9 text-xs sm:text-sm font-['Roboto'] px-2"
+                            onClick={e => handleApply(e, job.id)}
+                          >
+                            Ứng tuyển
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="flex-1 h-8 sm:h-9 text-xs sm:text-sm font-['Roboto'] gap-1 px-2 border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            onClick={e => handleRemoveFromSaved(e, job.id)}
+                            disabled={removingJobId === job.id}
+                            title="Bỏ lưu"
+                          >
+                            {removingJobId === job.id ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="size-3.5" />
+                            )}
+                            <span className="truncate">Bỏ lưu</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))
             ) : (
-              <Card className="shadow-sm">
+              <Card className="shadow-sm lg:col-span-2">
                 <CardContent className="p-12 text-center">
                   <Heart className="mx-auto mb-4 size-12 text-muted-foreground/60" />
                   <h3 className="mb-2 font-['Open_Sans'] text-lg font-medium text-foreground">Chưa có việc làm đã lưu</h3>

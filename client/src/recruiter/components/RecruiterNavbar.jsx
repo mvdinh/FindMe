@@ -36,7 +36,7 @@ const HRSidebarPanel = ({ onNavigate }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/tuyen-dung');
     closeMobile();
   };
 

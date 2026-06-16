@@ -561,7 +561,9 @@ router.put('/:id/status', auth, authorize('recruiter', 'admin'), [param('id').is
           interview_scheduled: `Chúc mừng! Bạn được mời phỏng vấn cho vị trí ${job.title}.${normalizedNotes ? ` Thông tin từ nhà tuyển dụng: ${normalizedNotes}` : ''} Vui lòng mở mục xác nhận lịch trên hệ thống để hoàn tất.`
         };
         const notifTitle = status === 'interview_scheduled' ? 'Thông báo phỏng vấn' : status === INTERVIEW_PASSED ? 'Kết quả phỏng vấn' : 'Cập nhật trạng thái đơn ứng tuyển';
-        const actionUrl = status === 'interview_scheduled' ? `/applicant/confirm-interview?applicationId=${application._id}` : '/applicant/applications';
+        const actionUrl = status === 'interview_scheduled'
+          ? `/applicant/confirm-interview?applicationId=${application._id}`
+          : (status === 'rejected' ? `/applicant/applications?showFeedback=${application._id}` : '/applicant/applications');
         await createAndEmit({
           toUserId: application.applicant,
           toRole: 'applicant',

@@ -15,7 +15,8 @@ router.get('/', async (req, res) => {
       });
     }
     const user = await User.findById(req.user._id).populate({
-      path: 'savedJobs'
+      path: 'savedJobs',
+      populate: { path: 'company', select: 'name logo' }
     });
     if (!user) {
       return res.status(404).json({
@@ -26,7 +27,7 @@ router.get('/', async (req, res) => {
     const savedJobsData = user.savedJobs.map(job => ({
       id: job._id,
       title: job.title,
-      company: 'FindMe',
+      company: job.company ? { name: job.company.name, logo: job.company.logo } : { name: 'FindMe' },
       location: job.location,
       workType: job.workType,
       jobType: job.jobType,

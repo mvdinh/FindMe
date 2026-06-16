@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ApplicantLayout from '../layout/ApplicantLayout';
 import { HR_PAGE, HR_PAGE_HEADER, HR_H1, HR_SUBTITLE, HR_TABLE_WRAP } from '../applicantLayoutClasses';
 import { HR_INPUT } from '../applicantFormClasses';
@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ClipboardList, Download, MessageSquareText, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { ClipboardList, Download, MessageSquareText, Eye, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 import { useToast } from '../../contexts/ToastContext';
 
@@ -36,6 +36,9 @@ const ApplicationsPage = () => {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackTitle, setFeedbackTitle] = useState('Phản hồi từ nhà tuyển dụng');
+
+  const [searchParams] = useSearchParams();
+  const showFeedbackAppId = searchParams.get('showFeedback');
 
   const openApplicationResume = async applicationId => {
     if (!applicationId) return;
@@ -140,6 +143,65 @@ const ApplicationsPage = () => {
     setFeedbackOpen(true);
   };
 
+  const triggerFeedbackModal = (app) => {
+    if (!app) return;
+    if (app.status === 'rejected') {
+      const detail = (getRejectionReason(app) || '').trim();
+      const postInterviewFail = isPostInterviewRejection(app);
+      const title = postInterviewFail ? 'Kết quả phỏng vấn — Không đạt' : 'Phản hồi từ nhà tuyển dụng';
+      const body = detail || 'Nhà tuyển dụng chưa để lại nội dung chi tiết trên hệ thống. Bạn có thể xem thông báo trong mục thông báo nếu có.';
+      openEmployerFeedback(title, body);
+    } else if (app.status === 'interview_passed') {
+      const detail = (getPassInterviewReason(app) || '').trim();
+      const title = 'Kết quả phỏng vấn — Đạt';
+      const body = detail || 'Nhà tuyển dụng chưa để lại nội dung chi tiết trên hệ thống. Bạn có thể xem thông báo trong mục thông báo nếu có.';
+      openEmployerFeedback(title, body);
+    } else {
+      const notes = Array.isArray(app.notes) ? app.notes : [];
+      const latestVisibleNote = [...notes].reverse().find(item => !item?.isPrivate && (item?.text || item?.content));
+      const body = latestVisibleNote?.text || latestVisibleNote?.content || '';
+      if (body) {
+        openEmployerFeedback('Thông tin phản hồi', body.trim());
+      }
+    }
+  };
+
+  const clearShowFeedbackParam = () => {
+    const newParams = new URLSearchParams(window.location.search);
+    newParams.delete('showFeedback');
+    const newSearch = newParams.toString();
+    const newPath = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+    window.history.replaceState(null, '', newPath);
+  };
+
+  useEffect(() => {
+    if (!showFeedbackAppId || isLoading) return;
+
+    const checkAndShowFeedback = async () => {
+      const app = applications.find(a => a._id === showFeedbackAppId);
+      if (app) {
+        triggerFeedbackModal(app);
+        clearShowFeedbackParam();
+      } else {
+        try {
+          const response = await apiRequest(`/api/applicant/applications/${encodeURIComponent(showFeedbackAppId)}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data?.application) {
+              triggerFeedbackModal(data.application);
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching application for feedback:', err);
+        } finally {
+          clearShowFeedbackParam();
+        }
+      }
+    };
+
+    checkAndShowFeedback();
+  }, [showFeedbackAppId, isLoading, applications]);
+
   const statusFilterLabel = raw => {
     const labels = {
       submitted: 'Đã nộp',
@@ -219,17 +281,16 @@ const ApplicationsPage = () => {
           <>
             <div className={HR_TABLE_WRAP}>
               <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-                <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+                <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] thin-scrollbar">
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-muted/50">
-                        <TableHead className="w-14 text-center font-['Roboto'] text-xs">STT</TableHead>
-                        <TableHead className="font-['Roboto'] text-xs">Mã tuyển dụng</TableHead>
-                        <TableHead className="font-['Roboto'] text-xs">Vị trí</TableHead>
-                        <TableHead className="font-['Roboto'] text-xs">Địa điểm</TableHead>
-                        <TableHead className="font-['Roboto'] text-xs">Ngày nộp</TableHead>
-                        <TableHead className="font-['Roboto'] text-xs">Trạng thái</TableHead>
-                        <TableHead className="text-left font-['Roboto'] text-xs">Thao tác</TableHead>
+                        <TableHead className="w-16 text-center font-['Roboto'] text-base font-semibold text-gray-900">STT</TableHead>
+                        <TableHead className="font-['Roboto'] text-base font-semibold text-gray-900">Việc làm</TableHead>
+                        <TableHead className="font-['Roboto'] text-base font-semibold text-gray-900">Địa điểm</TableHead>
+                        <TableHead className="font-['Roboto'] text-base font-semibold text-gray-900">Ngày nộp</TableHead>
+                        <TableHead className="font-['Roboto'] text-base font-semibold text-gray-900">Trạng thái</TableHead>
+                        <TableHead className="text-left font-['Roboto'] text-base font-semibold text-gray-900">Thao tác</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -246,25 +307,22 @@ const ApplicationsPage = () => {
                         const canViewResume = Boolean(application?._id);
                         return (
                           <TableRow key={application._id}>
-                            <TableCell className="text-center font-['Roboto'] text-sm tabular-nums text-muted-foreground">
+                            <TableCell className="text-center font-['Roboto'] text-base tabular-nums text-muted-foreground">
                               {stt}
                             </TableCell>
-                            <TableCell className="align-top">
-                              <span className="font-mono text-xs font-medium text-foreground">{code || '—'}</span>
-                            </TableCell>
                             <TableCell className="max-w-xs align-top">
-                              <div className="font-['Open_Sans'] text-sm font-medium text-foreground">
+                              <div className="font-['Open_Sans'] text-[17px] font-medium text-foreground">
                                 {application.job?.title || '—'}
                               </div>
                             </TableCell>
-                            <TableCell className="whitespace-nowrap font-['Roboto'] text-sm text-muted-foreground">
+                            <TableCell className="whitespace-nowrap font-['Roboto'] text-base text-muted-foreground">
                               {application.job?.location || '—'}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap font-['Roboto'] text-sm text-muted-foreground">
+                            <TableCell className="whitespace-nowrap font-['Roboto'] text-base text-muted-foreground">
                               {application.createdAt ? formatDateVN(application.createdAt) : '—'}
                             </TableCell>
                             <TableCell className="whitespace-nowrap">
-                              <Badge variant="outline" className={cn('font-normal', hrStatusBadgeClass(statusBadgeKey(application)))}>
+                              <Badge variant="outline" className={cn('font-normal text-sm px-3 py-1', hrStatusBadgeClass(statusBadgeKey(application)))}>
                                 {getStatusText(application)}
                               </Badge>
                             </TableCell>
@@ -393,13 +451,68 @@ const ApplicationsPage = () => {
       </div>
 
       <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-['Open_Sans'] text-left">Phản hồi từ nhà tuyển dụng</DialogTitle>
-          </DialogHeader>
-          <p className="max-h-[min(60vh,24rem)] overflow-y-auto font-['Roboto'] text-sm leading-relaxed whitespace-pre-wrap text-foreground">
-            {feedbackText}
-          </p>
+        <DialogContent className="sm:max-w-md !p-0 !gap-0 rounded-2xl border-none shadow-2xl overflow-hidden bg-card">
+          {(() => {
+            const titleLower = (feedbackTitle || '').toLowerCase();
+            const type = titleLower.includes('đạt') && !titleLower.includes('không đạt')
+              ? 'pass'
+              : (titleLower.includes('không đạt') || titleLower.includes('từ chối') || titleLower.includes('sàng lọc') || titleLower.includes('ats')
+                ? 'fail'
+                : 'info');
+
+            return (
+              <>
+                <div className={cn(
+                  "p-6 pb-5 flex items-start gap-4 border-b",
+                  type === 'pass' && "bg-gradient-to-r from-emerald-50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/10 border-emerald-100/50 dark:border-emerald-950/50",
+                  type === 'fail' && "bg-gradient-to-r from-rose-50 to-orange-50/50 dark:from-rose-950/20 dark:to-orange-950/10 border-rose-100/50 dark:border-rose-950/50",
+                  type === 'info' && "bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/10 border-blue-100/50 dark:border-blue-950/50"
+                )}>
+                  {type === 'pass' && (
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+                      <CheckCircle2 className="size-5" />
+                    </div>
+                  )}
+                  {type === 'fail' && (
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-lg shadow-rose-500/20">
+                      <AlertTriangle className="size-5" />
+                    </div>
+                  )}
+                  {type === 'info' && (
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
+                      <MessageSquareText className="size-5" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0 pr-6">
+                    <DialogTitle className="font-['Open_Sans'] text-lg font-semibold text-foreground leading-tight tracking-tight">
+                      {feedbackTitle}
+                    </DialogTitle>
+                    <p className="text-[11px] font-['Roboto'] font-medium text-muted-foreground/80 mt-1 uppercase tracking-wider">
+                      Phản hồi từ hệ thống FindMe
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="rounded-xl bg-muted/30 dark:bg-muted/10 border border-border/40 p-5 shadow-inner">
+                    <p className="max-h-[min(40vh,16rem)] overflow-y-auto font-['Roboto'] text-[15px] leading-relaxed whitespace-pre-wrap text-foreground/90 pr-2 thin-scrollbar">
+                      {feedbackText}
+                    </p>
+                  </div>
+                  <div className="mt-5 flex items-center justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-10 px-6 rounded-lg font-['Roboto'] font-semibold text-sm transition-all hover:bg-muted active:scale-[0.98]"
+                      onClick={() => setFeedbackOpen(false)}
+                    >
+                      Đóng
+                    </Button>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </ApplicantLayout>

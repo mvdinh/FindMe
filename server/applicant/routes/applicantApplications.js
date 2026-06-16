@@ -656,11 +656,11 @@ router.post("/", auth, upload.single("customResume"), async (req, res) => {
           : `${lastName} ${firstName} đã ứng tuyển vào ${job.title}`;
         await createAndEmit({
           toUserId: job.postedBy,
-          toRole: "hr",
+          toRole: "recruiter",
           type: "application_submitted",
           title: hrTitle,
           message: hrMessage,
-          actionUrl: `/hr/applications/${application._id}`,
+          actionUrl: `/recruiter/applications/${application._id}`,
           entity: {
             kind: "Application",
             id: application._id,
@@ -692,7 +692,10 @@ router.post("/", auth, upload.single("customResume"), async (req, res) => {
             application.status === "rejected"
               ? applicantAtsPoliteMessage(job.title)
               : `Đơn ứng tuyển của bạn cho vị trí ${job.title} đã được gửi thành công và đang chờ nhà tuyển dụng xem xét.`,
-          actionUrl: `/applicant/applications`,
+          actionUrl:
+            application.status === "rejected"
+              ? `/applicant/applications?showFeedback=${application._id}`
+              : `/applicant/applications`,
           entity: {
             kind: "Application",
             id: application._id,
@@ -713,11 +716,11 @@ router.post("/", auth, upload.single("customResume"), async (req, res) => {
               : 60;
           await createAndEmit({
             toUserId: job.postedBy,
-            toRole: "hr",
+            toRole: "recruiter",
             type: "application_status_changed",
             title: "ATS tự động từ chối ứng viên",
             message: `${lastName} ${firstName} bị ATS từ chối cho vị trí ${job.title}${typeof score === "number" ? ` (điểm CV ${score}% < ngưỡng ${threshold}%)` : ""}.`,
-            actionUrl: `/hr/applications/${application._id}`,
+            actionUrl: `/recruiter/applications/${application._id}`,
             entity: {
               kind: "Application",
               id: application._id,
@@ -739,7 +742,7 @@ router.post("/", auth, upload.single("customResume"), async (req, res) => {
             type: "application_status_changed",
             title: "Kết quả sàng lọc ATS",
             message: applicantAtsPoliteMessage(job.title),
-            actionUrl: `/applicant/applications`,
+            actionUrl: `/applicant/applications?showFeedback=${application._id}`,
             entity: {
               kind: "Application",
               id: application._id,
@@ -985,11 +988,11 @@ router.post(
           if (job.postedBy) {
             await createAndEmit({
               toUserId: job.postedBy,
-              toRole: "hr",
+              toRole: "recruiter",
               type: "application_status_changed",
               title: "Ứng viên đã xác nhận lịch phỏng vấn",
               message: `Ứng viên đã xác nhận lịch phỏng vấn cho đơn ứng tuyển vị trí "${job.title}".`,
-              actionUrl: "/hr/applications",
+              actionUrl: "/recruiter/applications",
               entity: {
                 kind: "Application",
                 id: application._id,

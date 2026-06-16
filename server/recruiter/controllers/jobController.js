@@ -48,23 +48,13 @@ const getJobs = async (req, res) => {
     if (status) {
       query.status = status.toLowerCase();
     }
-    if (department) {
-      query.department = {
-        $regex: department,
-        $options: 'i'
-      };
-    }
+
     if (jobType) {
       query.jobType = jobType;
     }
     if (search) {
       query.$or = [{
         title: {
-          $regex: search,
-          $options: 'i'
-        }
-      }, {
-        department: {
           $regex: search,
           $options: 'i'
         }
@@ -118,7 +108,6 @@ const getJobs = async (req, res) => {
         id: job._id,
         title: job.title,
         description: job.description,
-        department: job.department,
         jobType: job.jobType,
         location: job.location,
         locationType: job.locationType,
@@ -134,8 +123,6 @@ const getJobs = async (req, res) => {
         benefits: job.benefits,
         views: job.views || 0,
         salaryRange: job.salaryRange,
-        requiredSkills: job.requiredSkills || [],
-        preferredSkills: job.preferredSkills || [],
         qualification: job.qualification,
         experienceLevel: job.experienceLevel,
         maxApplicants: job.maxApplicants,
@@ -185,7 +172,7 @@ const getJobs = async (req, res) => {
         applied: {
           search,
           status,
-          department,
+
           jobType,
           filter
         }
@@ -265,34 +252,36 @@ const createJob = async (req, res) => {
     }
 
     const populatedJob = await Job.findById(job._id).populate('postedBy', 'firstName lastName').populate('company').lean();
-    try {
-      const recruiterUser = await User.findById(userId).select('firstName lastName');
-      if (recruiterUser) {
-        try {
-          await createAndEmit({
-            toRole: 'admin',
-            type: 'job_created',
-            title: 'Việc làm mới đã đăng',
-            message: `${recruiterUser.lastName} ${recruiterUser.firstName} đã đăng việc làm mới: ${normalizedInput.title}`,
-            actionUrl: `/admin/jobs/${job._id}`,
-            entity: {
-              kind: 'Job',
-              id: job._id
-            },
-            priority: 'low',
-            metadata: {
-              recruiterName: `${recruiterUser.lastName} ${recruiterUser.firstName}`,
-              jobTitle: normalizedInput.title,
-              department: normalizedInput.department
-            },
-            createdBy: userId
-          });
-        } catch (e) {
-          console.error('Failed to notify admins (job created):', e);
+    if (finalStatus !== 'draft') {
+      try {
+        const recruiterUser = await User.findById(userId).select('firstName lastName');
+        if (recruiterUser) {
+          try {
+            await createAndEmit({
+              toRole: 'admin',
+              type: 'job_created',
+              title: 'Việc làm mới đã đăng',
+              message: `${recruiterUser.lastName} ${recruiterUser.firstName} đã đăng việc làm mới: ${normalizedInput.title}`,
+              actionUrl: `/admin/jobs/${job._id}`,
+              entity: {
+                kind: 'Job',
+                id: job._id
+              },
+              priority: 'low',
+              metadata: {
+                recruiterName: `${recruiterUser.lastName} ${recruiterUser.firstName}`,
+                jobTitle: normalizedInput.title,
+                department: normalizedInput.department
+              },
+              createdBy: userId
+            });
+          } catch (e) {
+            console.error('Failed to notify admins (job created):', e);
+          }
         }
+      } catch (notifError) {
+        console.error('Failed to send job creation notification:', notifError);
       }
-    } catch (notifError) {
-      console.error('Failed to send job creation notification:', notifError);
     }
     res.status(201).json({
       success: true,

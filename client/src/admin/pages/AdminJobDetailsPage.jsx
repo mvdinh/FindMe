@@ -109,7 +109,18 @@ const AdminJobDetailsPage = () => {
             Bản nháp
           </Badge>
         );
-
+      case "pending_approval":
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+            Chờ phê duyệt
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge className="bg-slate-100 text-slate-800 border-slate-200">
+            Bị từ chối
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -234,7 +245,7 @@ const AdminJobDetailsPage = () => {
                       Hạn nộp hồ sơ
                     </span>
                     <span className="font-medium">
-                      {formatDateVN(job.deadline) || "Không có"}
+                      {formatDateVN(job.applicationDeadline) || "Không có"}
                     </span>
                   </div>
                 </div>

@@ -106,6 +106,7 @@ const RecruiterJobManagement = () => {
   const [statusRequestModal, setStatusRequestModal] = useState(null);
   const [statusRequestMessage, setStatusRequestMessage] = useState("");
   const [statusRequestSubmitting, setStatusRequestSubmitting] = useState(false);
+  const [isCompanyApproved, setIsCompanyApproved] = useState(false);
   const pageBusy = loading || statusRequestSubmitting;
   const fetchJobs = async (
     page = 1,
@@ -149,6 +150,16 @@ const RecruiterJobManagement = () => {
           } catch (_) {
             setPendingJobIdSet([]);
           }
+        }
+        try {
+          const compRes = await makeJsonRequest("/api/companies/me");
+          if (compRes?.success && compRes.data?.verificationStatus === "approved") {
+            setIsCompanyApproved(true);
+          } else {
+            setIsCompanyApproved(false);
+          }
+        } catch (_) {
+          setIsCompanyApproved(false);
         }
       } else {
         setError(response.message || "Không thể tải danh sách tin tuyển dụng");
@@ -374,21 +385,20 @@ const RecruiterJobManagement = () => {
                 Đăng, chỉnh sửa và quản lý tin tuyển dụng findme
               </p>
             </div>
-            <div className="w-full shrink-0 lg:w-auto">
+            <div className={`w-full shrink-0 lg:w-auto ${pageBusy || !isCompanyApproved ? "cursor-not-allowed" : ""}`}>
               <Button
-                className="min-h-11 w-full touch-manipulation font-['Roboto'] lg:w-auto"
-                asChild
-                disabled={pageBusy}
+                className={`min-h-11 w-full touch-manipulation font-['Roboto'] lg:w-auto ${pageBusy || !isCompanyApproved ? "pointer-events-none" : ""}`}
+                disabled={pageBusy || !isCompanyApproved}
+                onClick={(e) => {
+                  if (pageBusy || !isCompanyApproved) {
+                    e.preventDefault();
+                    return;
+                  }
+                  navigate("/recruiter/jobs/create");
+                }}
               >
-                <Link
-                  to="/recruiter/jobs/create"
-                  tabIndex={pageBusy ? -1 : undefined}
-                  aria-hidden={pageBusy}
-                  className="inline-flex items-center gap-2"
-                >
-                  <Plus className="size-5 shrink-0" />
-                  Đăng tin tuyển dụng
-                </Link>
+                <Plus className="size-5 shrink-0 mr-2" />
+                Đăng tin tuyển dụng
               </Button>
             </div>
           </div>

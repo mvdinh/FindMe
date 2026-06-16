@@ -84,9 +84,15 @@ app.use((req, res, next) => {
 });
 connectDB();
 startApplicationAiCron();
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+const path = require('path');
+app.use('/uploads/company-logos', express.static(path.join(__dirname, 'logo')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const IS_PROD = process.env.NODE_ENV === 'production';
 const WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
 const DEFAULT_MAX = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 300;

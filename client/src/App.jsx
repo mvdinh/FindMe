@@ -24,6 +24,7 @@ import UnauthorizedPage from "./home/pages/UnauthorizedPage.jsx";
 import JobsPage from "./applicant/pages/JobsPage.jsx";
 import JobSearchPage from "./applicant/pages/JobSearchPage.jsx";
 import CompaniesPage from "./home/pages/CompaniesPage.jsx";
+import CompanyDetailsPage from "./home/pages/CompanyDetailsPage.jsx";
 import JobDetailsPage from "./applicant/pages/JobDetailsPage.jsx";
 import ApplicationsPage from "./applicant/pages/ApplicationsPage.jsx";
 import ConfirmInterviewPage from "./applicant/pages/ConfirmInterviewPage.jsx";
@@ -60,6 +61,14 @@ function App() {
               <Routes>
                 {}
                 <Route
+                  path="/home"
+                  element={
+                    <Layout>
+                      <HomePage />
+                    </Layout>
+                  }
+                />
+                <Route
                   path="/"
                   element={
                     <Layout>
@@ -88,6 +97,14 @@ function App() {
                   element={
                     <Layout>
                       <CompaniesPage />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/companies/:id"
+                  element={
+                    <Layout>
+                      <CompanyDetailsPage />
                     </Layout>
                   }
                 />
@@ -216,7 +233,7 @@ function App() {
                 />
 
                 {}
-                
+
                 <Route
                   path="/admin/recruiter-management"
                   element={

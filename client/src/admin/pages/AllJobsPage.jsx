@@ -47,6 +47,7 @@ import { useApiRequest } from "../../hooks/useApiRequest";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 const AllJobsPage = () => {
   const navigate = useNavigate();
@@ -67,19 +68,20 @@ const AllJobsPage = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(12);
   const [departments, setDepartments] = useState([]);
   const [jobTypes, setJobTypes] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 10,
+    limit: 12,
   });
   const [selectedJobs, setSelectedJobs] = useState(new Set());
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [hrPosterOptions, setHrPosterOptions] = useState([]);
   const [totals, setTotals] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
   const buildQuery = useCallback(() => {
     const params = [];
     if (filterStatus !== "all")
@@ -235,22 +237,26 @@ const AllJobsPage = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "active":
-        return "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300";
+        return "border-emerald-400 bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300";
       case "closed":
-        return "border-destructive/30 bg-destructive/10 text-destructive";
+        return "border-slate-400 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300";
       case "draft":
-        return "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200";
-
+        return "border-slate-300 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+      case "pending_approval":
+        return "border-amber-400 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300";
+      case "rejected":
+        return "border-red-400 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
       default:
         return "border-border bg-muted text-foreground";
     }
   };
   const getStatusLabel = (status) => {
     const map = {
-      active: "đang hoạt động",
-      closed: "đã đóng",
-      draft: "bản nháp",
-
+      active: "Đang hoạt động",
+      closed: "Đã đóng",
+      draft: "Bản nháp",
+      pending_approval: "Chờ kiểm duyệt",
+      rejected: "Đã từ chối",
     };
     return map[status] || status;
   };
@@ -394,7 +400,7 @@ const AllJobsPage = () => {
                       className="min-h-10 pl-10 font-['Roboto'] text-sm"
                     />
                   </div>
-                  {["all", "active", "closed", "draft"].map((s) => (
+                  {["all", "pending_approval", "active", "rejected", "closed", "draft"].map((s) => (
                     <Button
                       key={s}
                       type="button"
@@ -413,8 +419,12 @@ const AllJobsPage = () => {
                           : s === "closed"
                             ? "Đã đóng"
                             : s === "draft"
-                              ? "Chờ phê duyệt"
-                              : s}
+                              ? "Bản nháp"
+                              : s === "pending_approval"
+                                ? "Chờ kiểm duyệt"
+                                : s === "rejected"
+                                  ? "Đã từ chối"
+                                  : s}
                     </Button>
                   ))}
                 </div>
@@ -497,7 +507,7 @@ const AllJobsPage = () => {
                   type="button"
                   size="sm"
                   className="font-['Roboto']"
-                  onClick={() => handleBulkAction("active")}
+                  onClick={() => setConfirmAction({ type: 'bulk', status: 'active' })}
                 >
                   Kích hoạt
                 </Button>
@@ -506,7 +516,7 @@ const AllJobsPage = () => {
                   variant="secondary"
                   size="sm"
                   className="font-['Roboto']"
-                  onClick={() => handleBulkAction("closed")}
+                  onClick={() => setConfirmAction({ type: 'bulk', status: 'closed' })}
                 >
                   Đóng
                 </Button>
@@ -542,18 +552,10 @@ const AllJobsPage = () => {
                     <TableHead className="w-12 px-2 text-center font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       STT
                     </TableHead>
-                    <TableHead className="w-10 px-3">
-                      <Checkbox
-                        checked={
-                          jobs.length > 0 && selectedJobs.size === jobs.length
-                        }
-                        onCheckedChange={() => toggleSelectAll()}
-                      />
-                    </TableHead>
-                    <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[45%] min-w-[250px] px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Tin tuyển dụng
                     </TableHead>
-                    <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <TableHead className="w-[15%] max-w-[150px] px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Nhà tuyển dụng
                     </TableHead>
                     <TableHead className="px-6 font-['Roboto'] text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -576,12 +578,6 @@ const AllJobsPage = () => {
                       <TableCell className="px-2 py-4 text-center font-['Roboto'] text-sm tabular-nums text-muted-foreground">
                         {(page - 1) * limit + index + 1}
                       </TableCell>
-                      <TableCell className="px-3 py-4">
-                        <Checkbox
-                          checked={selectedJobs.has(job.id)}
-                          onCheckedChange={() => toggleSelectJob(job.id)}
-                        />
-                      </TableCell>
                       <TableCell className="px-6 py-4 whitespace-normal">
                         <div>
                           <div className="font-['Open_Sans'] text-sm font-medium text-foreground">
@@ -591,7 +587,7 @@ const AllJobsPage = () => {
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4">
-                        <div className="font-['Open_Sans'] text-sm font-medium text-foreground">
+                        <div className="font-['Open_Sans'] text-sm font-medium text-foreground truncate max-w-[150px]" title={job.company}>
                           {job.company}
                         </div>
                         
@@ -606,7 +602,7 @@ const AllJobsPage = () => {
                         <Badge
                           variant="outline"
                           className={cn(
-                            "font-['Roboto'] font-normal whitespace-nowrap",
+                            "font-['Roboto'] font-semibold whitespace-nowrap",
                             getStatusColor(job.status),
                           )}
                         >
@@ -641,32 +637,52 @@ const AllJobsPage = () => {
                               align="end"
                               className="w-48 min-w-[12rem] font-['Roboto']"
                             >
-                              <DropdownMenuItem
-                                disabled={job.status === "closed"}
-                                onClick={() =>
-                                  updateJobStatusDirect(job.id, "closed")
-                                }
-                                className="gap-2 text-destructive focus:text-destructive"
-                              >
-                                <span className="inline-block size-2 rounded-full bg-red-500" />
-                                Đóng tin
-                                {job.status === "closed" && (
-                                  <Check className="ml-auto size-3 text-red-600" />
-                                )}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                disabled={job.status === "active"}
-                                onClick={() =>
-                                  updateJobStatusDirect(job.id, "active")
-                                }
-                                className="gap-2"
-                              >
-                                <span className="inline-block size-2 rounded-full bg-green-500" />
-                                Kích hoạt
-                                {job.status === "active" && (
-                                  <Check className="ml-auto size-3 text-green-600" />
-                                )}
-                              </DropdownMenuItem>
+                              {job.status === "active" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    setConfirmAction({ type: 'single', jobId: job.id, status: 'closed' })
+                                  }
+                                  className="gap-2 text-destructive focus:text-destructive"
+                                >
+                                  <span className="inline-block size-2 rounded-full bg-red-500" />
+                                  Đóng tin
+                                </DropdownMenuItem>
+                              )}
+
+                              {job.status === "pending_approval" && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      setConfirmAction({ type: 'single', jobId: job.id, status: 'active' })
+                                    }
+                                    className="gap-2"
+                                  >
+                                    <span className="inline-block size-2 rounded-full bg-emerald-500" />
+                                    Duyệt
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      setConfirmAction({ type: 'single', jobId: job.id, status: 'rejected' })
+                                    }
+                                    className="gap-2 text-orange-600 focus:text-orange-600"
+                                  >
+                                    <span className="inline-block size-2 rounded-full bg-orange-500" />
+                                    Từ chối
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+
+                              {job.status === "closed" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    setConfirmAction({ type: 'single', jobId: job.id, status: 'active' })
+                                  }
+                                  className="gap-2"
+                                >
+                                  <span className="inline-block size-2 rounded-full bg-emerald-500" />
+                                  Mở lại tin
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -688,6 +704,25 @@ const AllJobsPage = () => {
           />
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={confirmAction !== null}
+        onClose={() => setConfirmAction(null)}
+        title="Xác nhận thay đổi trạng thái"
+        description={
+          confirmAction?.type === "bulk"
+            ? `Bạn có chắc chắn muốn chuyển ${selectedJobs.size} tin tuyển dụng sang trạng thái "${getStatusLabel(confirmAction?.status)}"?`
+            : `Bạn có chắc chắn muốn chuyển tin tuyển dụng này sang trạng thái "${getStatusLabel(confirmAction?.status)}"?`
+        }
+        onConfirm={() => {
+          if (confirmAction?.type === "bulk") {
+            handleBulkAction(confirmAction.status);
+          } else if (confirmAction?.type === "single") {
+            updateJobStatusDirect(confirmAction.jobId, confirmAction.status);
+          }
+          setConfirmAction(null);
+        }}
+      />
     </AdminLayout>
   );
 };

@@ -33,12 +33,9 @@ router.get('/', auth, authorize('recruiter', 'admin'), requireCompany, [query('p
   min: 1,
   max: 50
 }).withMessage('Limit must be between 1 and 50'), query('search').optional().isLength({
-  min: 1,
+min: 1,
   max: 200
-}).withMessage('Search term must be between 1 and 200 characters'), query('status').optional().isIn(['active', 'closed', 'draft']).withMessage('Invalid status'), query('department').optional().isLength({
-  min: 1,
-  max: 100
-}).withMessage('Department must be between 1 and 100 characters'), query('employmentType').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance']).withMessage('Invalid employment type'), query('sortBy').optional().isIn(['createdAt', 'title', 'department', 'applicants']).withMessage('Invalid sort field'), query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc')], getJobs);
+}).withMessage('Search term must be between 1 and 200 characters'), query('status').optional().isIn(['active', 'closed', 'draft']).withMessage('Invalid status'), query('employmentType').optional().isIn(['Full-time', 'Part-time', 'Contract', 'Intern', 'Freelance']).withMessage('Invalid employment type'), query('sortBy').optional().isIn(['createdAt', 'title', 'applicants']).withMessage('Invalid sort field'), query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc')], getJobs);
 
 router.post('/', auth, authorize('recruiter', 'admin'), requireCompany, [body('title').optional().isLength({
   min: 3,
@@ -54,9 +51,9 @@ router.post('/', auth, authorize('recruiter', 'admin'), requireCompany, [body('t
 }), body('maxApplicants').optional().isInt({
   min: 1
 }).withMessage('Max applicants must be a positive integer'), body('atsEnabled').optional().isBoolean().withMessage('atsEnabled must be boolean'), body('atsResumeThreshold').optional().isFloat({
-  min: 0,
+min: 0,
   max: 100
-}).withMessage('atsResumeThreshold must be between 0 and 100'), body('atsSkipWhenCoverLetter').optional().isBoolean().withMessage('atsSkipWhenCoverLetter must be boolean'), body('atsEngine').optional().isIn(['gemini', 'scan_cv']).withMessage('atsEngine must be gemini or scan_cv'), body('requiredSkills').optional().isArray().withMessage('Required skills must be an array'), body('preferredSkills').optional().isArray().withMessage('Preferred skills must be an array'), body('status').optional().isIn(['draft', 'active']).withMessage('Invalid status'), body('requirements').optional().isLength({ max: 5000 }).withMessage('Requirements must be at most 5000 characters'), body('benefits').optional().isLength({ max: 5000 }).withMessage('Benefits must be at most 5000 characters')], (req, res) => {
+}).withMessage('atsResumeThreshold must be between 0 and 100'), body('atsSkipWhenCoverLetter').optional().isBoolean().withMessage('atsSkipWhenCoverLetter must be boolean'), body('atsEngine').optional().isIn(['gemini', 'scan_cv']).withMessage('atsEngine must be gemini or scan_cv'), body('status').optional().isIn(['draft', 'active']).withMessage('Invalid status'), body('requirements').optional().isLength({ max: 5000 }).withMessage('Requirements must be at most 5000 characters'), body('benefits').optional().isLength({ max: 5000 }).withMessage('Benefits must be at most 5000 characters')], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({

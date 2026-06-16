@@ -144,7 +144,7 @@ const RecruiterAuthPage = () => {
           "Đăng ký thành công! Đang chuyển hướng xác thực email...",
         );
         setTimeout(() => {
-          navigate("/verify-email", { state: { email: signupData.email } });
+          navigate("/verify-email", { state: { email: signupData.email, redirectTo: "/tuyen-dung" } });
         }, 1500);
       } else {
         setError(data.message || "Đăng ký thất bại. Vui lòng thử lại.");
@@ -690,20 +690,32 @@ const RecruiterAuthPage = () => {
       </div>
 
       {/* Right side banner sticky on desktop */}
-      <div className="hidden lg:flex w-[40%] bg-gradient-to-br from-slate-950 via-[#160606] to-zinc-950 text-white p-12 flex-col justify-between relative overflow-hidden h-full">
-        {/* Glow Effects */}
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-red-600/10 dark:bg-red-600/5 rounded-full filter blur-[80px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-emerald-500/5 rounded-full filter blur-[100px] pointer-events-none translate-x-1/2 translate-y-1/2" />
-
-        {/* Geometric dots background */}
-        <div
-          className="absolute inset-0 opacity-15 pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(rgba(238, 0, 0, 0.15) 1.5px, transparent 1.5px)",
-            backgroundSize: "24px 24px",
-          }}
-        />
+      <div className="hidden lg:flex w-[40%] relative bg-[#EE0000] text-white p-12 flex-col justify-between overflow-hidden h-full">
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <img
+            src="/slider1.webp"
+            alt=""
+            aria-hidden="true"
+            className="h-full w-full object-cover opacity-35 mix-blend-overlay"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#ee0000]/90 via-[#ee0000]/85 to-[#b80000]/90" />
+        </div>
+        <div className="absolute -bottom-10 -left-8 w-56 h-56 rounded-full overflow-hidden opacity-20 pointer-events-none">
+          <img
+            src="/slider2.webp"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="absolute -top-10 -right-8 w-56 h-56 rounded-full overflow-hidden opacity-20 pointer-events-none">
+          <img
+            src="/slider3.webp"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover"
+          />
+        </div>
 
         {/* Header Tabs inside banner area */}
         <div className="relative z-10 flex justify-end gap-2">
@@ -715,8 +727,8 @@ const RecruiterAuthPage = () => {
             }}
             className={`px-5 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all uppercase ${
               activeTab === "login"
-                ? "bg-[#EE0000] text-white shadow-lg"
-                : "bg-white/5 hover:bg-white/10 text-gray-300"
+                ? "bg-white text-[#EE0000] shadow-lg"
+                : "bg-white/10 hover:bg-white/20 text-white"
             }`}
           >
             Đăng nhập
@@ -729,8 +741,8 @@ const RecruiterAuthPage = () => {
             }}
             className={`px-5 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all uppercase ${
               activeTab === "signup"
-                ? "bg-[#EE0000] text-white shadow-lg"
-                : "bg-white/5 hover:bg-white/10 text-gray-300"
+                ? "bg-white text-[#EE0000] shadow-lg"
+                : "bg-white/10 hover:bg-white/20 text-white"
             }`}
           >
             Đăng ký mới
@@ -739,46 +751,33 @@ const RecruiterAuthPage = () => {
 
         {/* Dynamic illustration & heading */}
         <div className="relative z-10 text-center my-auto space-y-8 max-w-sm mx-auto">
-          <div className="min-h-[220px] flex items-center justify-center">
-            <img
-              src="/hirewise.svg"
-              alt="AI Candidate Match"
-              className="max-h-56 w-auto object-contain animate-float drop-shadow-[0_15px_40px_rgba(238,0,0,0.15)]"
-            />
-          </div>
-
           <div className="space-y-3">
-            <h2 className="text-2xl font-black uppercase tracking-wider leading-tight">
+            <h2 className="text-3xl font-black uppercase tracking-wider leading-tight">
               {activeTab === "login" ? (
                 <>
-                  Match your candidate <br />
-                  <span className="text-[#EE0000] dark:text-red-500">
-                    with AI
+                  TÌM KIẾM NHÂN TÀI <br />
+                  <span className="text-yellow-300">
+                    BẰNG CÔNG NGHỆ AI
                   </span>
                 </>
               ) : (
                 <>
-                  Track your funnel <br />
-                  <span className="text-emerald-400">with Report</span>
+                  QUẢN TRỊ TOÀN DIỆN <br />
+                  <span className="text-yellow-300">VỚI HỆ THỐNG ATS</span>
                 </>
               )}
             </h2>
-            <p className="text-xs text-gray-400 leading-relaxed font-medium">
+            <p className="text-sm text-white/90 leading-relaxed font-medium">
               {activeTab === "login"
-                ? "Tự động phân tích, phân loại ứng viên chính xác thông qua sức mạnh xử lý ngôn ngữ tự nhiên hàng đầu."
-                : "Hệ thống phễu dữ liệu báo cáo thông minh giúp tối ưu hóa hiệu quả tuyển dụng trên từng giai đoạn."}
+                ? "Giải pháp AI thông minh giúp doanh nghiệp tự động sàng lọc, đánh giá và kết nối chính xác với những ứng viên tiềm năng nhất."
+                : "Số hóa toàn bộ quy trình tuyển dụng. Đo lường hiệu quả và tối ưu hóa chi phí với hệ thống báo cáo dữ liệu chuyên sâu."}
             </p>
           </div>
         </div>
 
         {/* Bottom Slogan logo */}
         <div className="relative z-10 flex flex-col items-center justify-center space-y-1.5 mt-auto">
-          <img
-            src="/logo.png"
-            alt="FINDME"
-            className="h-6 w-auto brightness-200"
-          />
-          <span className="text-[10px] tracking-widest font-bold text-gray-400 uppercase">
+          <span className="text-xs tracking-widest font-bold text-white/90 uppercase">
             Tiếp lợi thế, nối thành công
           </span>
         </div>

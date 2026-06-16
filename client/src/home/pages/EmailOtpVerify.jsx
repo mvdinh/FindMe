@@ -7,6 +7,7 @@ export default function EmailOtpVerify() {
   const location = useLocation();
   const initialEmail = location.state?.email || '';
   const initialUserId = location.state?.userId || '';
+  const redirectTo = location.state?.redirectTo || '/login';
   const hasSentInitialOtp = useRef(false);
   const lastAutoVerifiedRef = useRef('');
   const [email, setEmail] = useState(initialEmail);
@@ -141,7 +142,7 @@ export default function EmailOtpVerify() {
         return;
       }
       setMessage('Xác minh email thành công. Đang chuyển tới trang đăng nhập...');
-      setTimeout(() => navigate('/login'), 1200);
+      setTimeout(() => navigate(redirectTo), 1200);
     } catch (e) {
       setError('Lỗi mạng khi xác minh mã');
     } finally {

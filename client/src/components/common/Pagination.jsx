@@ -11,8 +11,6 @@ export function Pagination({
   limit = 20,
   itemLabel = "kết quả"
 }) {
-  if (totalPages <= 1) return null;
-
   const startItem = (currentPage - 1) * limit + 1;
   const endItem = Math.min(currentPage * limit, totalItems || 0);
 

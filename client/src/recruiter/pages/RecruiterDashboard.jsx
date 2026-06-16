@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import RecruiterLayout from '../layout/RecruiterLayout';
 import { HR_PAGE, HR_PAGE_HEADER, HR_H1, HR_SUBTITLE } from '../recruiterLayoutClasses';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,9 @@ import { recruiterStatusBadgeClass, recruiterScoreTextClass } from '../recruiter
 import { getInterviewPassFailLabel, getInterviewPassFailBadgeKey } from '../../utils/applicationStatusDisplay';
 import { cn } from '@/lib/utils';
 const RecruiterDashboard = () => {
+  const navigate = useNavigate();
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [isCompanyApproved, setIsCompanyApproved] = useState(false);
   const [recentJobs, setRecentJobs] = useState([]);
   const [recentApplications, setRecentApplications] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -65,10 +67,23 @@ const RecruiterDashboard = () => {
       setLoadingApplications(false);
     }
   }, [makeJsonRequest]);
+  const fetchCompanyStatus = useCallback(async () => {
+    try {
+      const compRes = await makeJsonRequest("/api/companies/me");
+      if (compRes?.success && compRes.data?.verificationStatus === "approved") {
+        setIsCompanyApproved(true);
+      } else {
+        setIsCompanyApproved(false);
+      }
+    } catch (_) {
+      setIsCompanyApproved(false);
+    }
+  }, [makeJsonRequest]);
   useEffect(() => {
     fetchStats();
     fetchRecentJobs();
     fetchRecentApplications();
+    fetchCompanyStatus();
   }, []);
   const getStatusLabel = status => {
     const s = (status || '').toString().trim().toLowerCase();
@@ -103,12 +118,22 @@ const RecruiterDashboard = () => {
             <h1 className={HR_H1}>Tổng quan tuyển dụng</h1>
             <p className={HR_SUBTITLE}>Theo dõi tin đăng và hồ sơ ứng viên trên findme</p>
           </div>
-          <Button className="w-full min-h-11 touch-manipulation font-['Roboto'] sm:w-auto" asChild>
-            <Link to="/recruiter/jobs/create" className="inline-flex items-center gap-2">
-              <Plus className="size-5 shrink-0" />
+          <div className={!isCompanyApproved ? "cursor-not-allowed" : ""}>
+            <Button 
+              className={`w-full min-h-11 touch-manipulation font-['Roboto'] sm:w-auto ${!isCompanyApproved ? "pointer-events-none" : ""}`} 
+              disabled={!isCompanyApproved}
+              onClick={(e) => {
+                if (!isCompanyApproved) {
+                  e.preventDefault();
+                  return;
+                }
+                navigate("/recruiter/jobs/create");
+              }}
+            >
+              <Plus className="size-5 shrink-0 mr-2" />
               Đăng tin tuyển dụng
-            </Link>
-          </Button>
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4 justify-center items-center">
@@ -342,9 +367,11 @@ const RecruiterDashboard = () => {
                 <CardTitle className="font-['Open_Sans'] text-lg">Thao tác nhanh</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
-                <Link
-                  to="/recruiter/jobs/create"
-                  className="group flex min-h-[52px] touch-manipulation items-center rounded-lg border border-border p-4 transition-colors hover:border-primary/30 hover:bg-muted/50"
+                <div
+                  className={`group flex min-h-[52px] touch-manipulation items-center rounded-lg border border-border p-4 transition-colors ${!isCompanyApproved ? "cursor-not-allowed opacity-50" : "hover:border-primary/30 hover:bg-muted/50 cursor-pointer"}`}
+                  onClick={() => {
+                    if (isCompanyApproved) navigate("/recruiter/jobs/create");
+                  }}
                 >
                   <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 transition-colors group-hover:bg-primary/15">
                     <Plus className="size-5 text-primary" />
@@ -355,7 +382,7 @@ const RecruiterDashboard = () => {
                     </h3>
                     <p className="font-['Roboto'] text-xs text-muted-foreground">Tạo tin mới trên findme</p>
                   </div>
-                </Link>
+                </div>
                 <Link
                   to="/recruiter/applications"
                   className="group flex min-h-[52px] touch-manipulation items-center rounded-lg border border-border p-4 transition-colors hover:border-primary/30 hover:bg-muted/50"

@@ -6,6 +6,7 @@ const {
 } = require('express-validator');
 const Job = require('../../global/models/Job');
 const Application = require('../../global/models/Application');
+const Company = require('../../global/models/Company');
 const {
   auth,
   authorize
@@ -35,13 +36,15 @@ router.get('/', [query('search').optional().trim(), query('workType').optional()
       minSalary,
       maxSalary,
       page = 1,
-      limit = 10,
+      limit = 9,
       sortBy = 'createdAt',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
+      company
     } = req.query;
     let query = {
       status: 'active'
     };
+    if (company) query.company = company;
     if (search) {
       query.$text = {
         $search: search
@@ -141,7 +144,7 @@ router.get('/', [query('search').optional().trim(), query('workType').optional()
       };
     });
     const totalJobs = await Job.countDocuments(query);
-    const limitNum = parseInt(limit, 10) || 10;
+    const limitNum = parseInt(limit, 10) || 9;
     const pageNum = parseInt(page, 10) || 1;
     const totalPages = Math.max(1, Math.ceil(totalJobs / limitNum));
     res.json({

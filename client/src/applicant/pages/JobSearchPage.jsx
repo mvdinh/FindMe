@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   HR_PAGE,
   HR_PAGE_HEADER,
@@ -34,20 +34,25 @@ import {
   Heart,
 } from "lucide-react";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 9;
 const JobSearchPage = () => {
   const navigate = useNavigate();
   const { apiRequest } = useAuth();
   const toast = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialKeyword = searchParams.get("keyword") || "";
+  const initialLocation = searchParams.get("location") || "";
+
+  const [searchTerm, setSearchTerm] = useState(initialKeyword);
   const [filters, setFilters] = useState({
     workType: "",
     jobType: "",
-    location: "",
+    location: initialLocation,
     experience: "",
     salary: "",
   });
+  const [submittedSearchTerm, setSubmittedSearchTerm] = useState(initialKeyword);
+  const [submittedLocation, setSubmittedLocation] = useState(initialLocation);
   const [currentPage, setCurrentPage] = useState(1);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +69,13 @@ const JobSearchPage = () => {
   const [savedJobIds, setSavedJobIds] = useState([]);
   const [topCompanies, setTopCompanies] = useState([]);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [companiesPage, setCompaniesPage] = useState(1);
+  const [companiesPagination, setCompaniesPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+    limit: 8,
+  });
   const CACHE_DURATION = CACHE_DURATIONS.JOBS;
   const CACHE_KEY_PREFIX = CACHE_PREFIXES.JOBS;
   const getCacheKey = (searchTerm, filtersObj, page) => {
@@ -138,7 +150,7 @@ const JobSearchPage = () => {
             ...data,
             jobs: data.jobs.map((job) => ({
               ...job,
-              companyLogo: job.companyLogo ? "LOGO_PLACEHOLDER" : null,
+              companyLogo: null,
             })),
           },
         };
@@ -180,27 +192,28 @@ const JobSearchPage = () => {
       try {
         setLoading(true);
         setError(null);
-        const cacheKey = getCacheKey(debouncedSearchTerm, filters, currentPage);
+        const cacheKey = getCacheKey(submittedSearchTerm, { ...filters, location: submittedLocation }, currentPage);
         if (useCache) {
           const cachedData = loadFromCache(cacheKey);
           if (cachedData) {
             setJobs(cachedData.jobs);
             setPagination(cachedData.pagination);
             setLoading(false);
+            return;
           }
         }
         const params = new URLSearchParams({
           page: currentPage.toString(),
           limit: PAGE_SIZE.toString(),
         });
-        if (debouncedSearchTerm.trim()) {
-          params.append("search", debouncedSearchTerm.trim());
+        if (submittedSearchTerm.trim()) {
+          params.append("search", submittedSearchTerm.trim());
         }
         if (filters.workType) params.append("workType", filters.workType);
         if (filters.jobType) params.append("jobType", filters.jobType);
         if (filters.experience)
           params.append("experienceLevel", filters.experience);
-        if (filters.location) params.append("location", filters.location);
+        if (submittedLocation) params.append("location", submittedLocation);
         const response = await apiRequest(`/api/jobs?${params}`);
         const data = await response.json();
         if (data.success) {
@@ -240,23 +253,29 @@ const JobSearchPage = () => {
         setLoading(false);
       }
     },
-    [debouncedSearchTerm, filters, currentPage, apiRequest],
+    [submittedSearchTerm, submittedLocation, filters.workType, filters.jobType, filters.experience, currentPage, apiRequest],
   );
 
-  const fetchTopCompanies = useCallback(async () => {
-    try {
-      setLoadingCompanies(true);
-      const response = await apiRequest("/api/companies?limit=8");
-      const data = await response.json();
-      if (data.success) {
-        setTopCompanies(data.data);
+  const fetchTopCompanies = useCallback(
+    async (page = 1) => {
+      try {
+        setLoadingCompanies(true);
+        const response = await apiRequest(
+          `/api/companies?limit=8&page=${page}`,
+        );
+        const data = await response.json();
+        if (data.success) {
+          setTopCompanies(data.data);
+          if (data.pagination) setCompaniesPagination(data.pagination);
+        }
+      } catch (err) {
+        console.error("Error fetching companies:", err);
+      } finally {
+        setLoadingCompanies(false);
       }
-    } catch (err) {
-      console.error("Error fetching companies:", err);
-    } finally {
-      setLoadingCompanies(false);
-    }
-  }, [apiRequest]);
+    },
+    [apiRequest],
+  );
 
   const fetchSavedJobs = useCallback(async () => {
     try {
@@ -275,20 +294,17 @@ const JobSearchPage = () => {
   }, [apiRequest]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-  useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  }, [debouncedSearchTerm, filters]);
+  }, [submittedSearchTerm, submittedLocation, filters.workType, filters.jobType, filters.experience]);
   useEffect(() => {
     fetchJobs();
-    fetchTopCompanies();
-  }, [debouncedSearchTerm, filters, currentPage, fetchJobs, fetchTopCompanies]);
+  }, [submittedSearchTerm, submittedLocation, filters.workType, filters.jobType, filters.experience, currentPage, fetchJobs]);
+
+  useEffect(() => {
+    fetchTopCompanies(companiesPage);
+  }, [companiesPage, fetchTopCompanies]);
 
   useEffect(() => {
     fetchSavedJobs();
@@ -313,25 +329,38 @@ const JobSearchPage = () => {
       setSavedJobIds((prev) => prev.filter((id) => id !== jobId));
       apiRequest(`/api/applicant/saved-jobs/${jobId}`, {
         method: "DELETE",
-      }).then((res) => {
-        if (res.ok) toast.info("Đã bỏ lưu việc làm");
-        else throw new Error("Failed to unsave");
-      }).catch(() => {
-        setSavedJobIds((prev) => [...prev, jobId]);
-        toast.error("Không thể bỏ lưu, vui lòng thử lại");
-      });
+      })
+        .then((res) => {
+          if (res.ok) toast.info("Đã bỏ lưu việc làm");
+          else throw new Error("Failed to unsave");
+        })
+        .catch(() => {
+          setSavedJobIds((prev) => [...prev, jobId]);
+          toast.error("Không thể bỏ lưu, vui lòng thử lại");
+        });
     } else {
       setSavedJobIds((prev) => [...prev, jobId]);
       apiRequest(`/api/applicant/saved-jobs/${jobId}`, {
         method: "POST",
-      }).then((res) => {
-        if (res.ok) toast.success("Đã lưu việc làm thành công");
-        else throw new Error("Failed to save");
-      }).catch(() => {
-        setSavedJobIds((prev) => prev.filter((id) => id !== jobId));
-        toast.error("Không thể lưu, vui lòng thử lại");
-      });
+      })
+        .then((res) => {
+          if (res.ok) toast.success("Đã lưu việc làm thành công");
+          else throw new Error("Failed to save");
+        })
+        .catch(() => {
+          setSavedJobIds((prev) => prev.filter((id) => id !== jobId));
+          toast.error("Không thể lưu, vui lòng thử lại");
+        });
     }
+  };
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    setSubmittedSearchTerm(searchTerm);
+    setSubmittedLocation(filters.location);
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("keyword", searchTerm);
+    if (filters.location) params.set("location", filters.location);
+    setSearchParams(params);
   };
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -352,6 +381,9 @@ const JobSearchPage = () => {
       salary: "",
     });
     setSearchTerm("");
+    setSubmittedSearchTerm("");
+    setSubmittedLocation("");
+    setSearchParams(new URLSearchParams());
   };
   const refreshJobs = useCallback(() => {
     fetchJobs(false);
@@ -386,8 +418,11 @@ const JobSearchPage = () => {
           </p>
 
           {/* Search Box */}
-          <div className="bg-white rounded-full p-2 flex flex-col md:flex-row items-center gap-2 max-w-5xl mx-auto shadow-2xl">
-            <div className="flex-1 flex items-center px-4 w-full md:w-auto border-b md:border-b-0 md:border-r border-gray-200">
+          <form 
+            onSubmit={handleSearchSubmit}
+            className="bg-white rounded-full p-2 flex flex-col md:flex-row items-center gap-2 max-w-5xl mx-auto shadow-2xl"
+          >
+            <div className="flex-[7] flex items-center px-4 w-full md:w-auto border-b md:border-b-0 md:border-r border-gray-200">
               <Search className="size-5 text-gray-400 shrink-0" />
               <input
                 type="text"
@@ -398,7 +433,7 @@ const JobSearchPage = () => {
               />
             </div>
 
-            <div className="flex-1 flex items-center px-4 w-full md:w-auto">
+            <div className="flex-[3] flex items-center px-4 w-full md:w-auto">
               <MapPin className="size-5 text-gray-400 shrink-0" />
               <select
                 value={filters.location}
@@ -416,12 +451,12 @@ const JobSearchPage = () => {
             </div>
 
             <Button
+              type="submit"
               className="w-full md:w-auto rounded-full bg-red-600 hover:bg-red-700 text-white px-8 py-6 text-base font-bold shadow-md transition-transform active:scale-95"
-              onClick={() => fetchJobs(false)}
             >
               Tìm kiếm
             </Button>
-          </div>
+          </form>
 
           <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm text-red-100">
             <span className="font-medium mr-2">Gợi ý:</span>
@@ -575,90 +610,106 @@ const JobSearchPage = () => {
                   {filteredJobs.map((job) => (
                     <Card
                       key={job.id}
-                      className="cursor-pointer shadow-sm transition-all hover:border-red-200 hover:shadow-md flex flex-col group"
+                      className="cursor-pointer shadow-sm transition-all hover:ring-red-500 hover:shadow-md flex flex-col group"
                       onClick={() => handleJobClick(job.id)}
                     >
-                      <CardContent className="p-4 flex flex-col h-full justify-between">
-                        {/* Top Section */}
-                        <div className="flex items-start gap-3 mb-4">
-                          <div className="shrink-0 w-14 h-14 rounded-lg border border-gray-200 p-1 flex items-center justify-center overflow-hidden bg-white">
-                            {(() => {
-                              const hasLogo =
-                                job.companyLogo ||
-                                (job.company && job.company.logo);
-                              const rawLogo =
-                                job.companyLogo || job.company?.logo;
-                              const logoSrc =
-                                rawLogo && rawLogo.startsWith("/uploads/")
-                                  ? `${getApiUrl()}${rawLogo}`
-                                  : rawLogo;
-                              return hasLogo ? (
-                                <img
-                                  src={logoSrc}
-                                  alt={`${(typeof job.company === "string" ? job.company : job.company?.name) || "Company"} logo`}
-                                  className="w-full h-full object-contain"
-                                  onError={(e) => {
-                                    e.target.style.display = "none";
-                                    const fallback =
-                                      e.target.parentElement.querySelector(
-                                        ".logo-fallback",
-                                      );
-                                    if (fallback)
-                                      fallback.style.display = "flex";
-                                  }}
-                                />
-                              ) : null;
-                            })()}
-                            <div
-                              className={cn(
-                                "logo-fallback flex h-full w-full items-center justify-center text-lg font-bold text-gray-400 bg-gray-50 rounded-md",
-                                job.companyLogo ||
-                                  (job.company && job.company.logo)
-                                  ? "hidden"
-                                  : "flex",
-                              )}
-                            >
-                              {(
-                                (typeof job.company === "string"
-                                  ? job.company
-                                  : job.company?.name) || "Company"
-                              )
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-['Open_Sans'] text-base font-bold text-red-600 group-hover:text-red-700 transition-colors line-clamp-2 leading-snug mb-1">
-                              {job.title}
-                            </h3>
-                            <p className="text-sm text-gray-500 truncate font-['Roboto'] uppercase">
-                              {typeof job.company === "string" ? job.company : job.company?.name || "Company"}
-                            </p>
+                      <CardContent className="p-3 flex items-start gap-3 sm:gap-4 h-full">
+                        {/* Logo Section */}
+                        <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg border border-gray-200 p-1 flex items-center justify-center overflow-hidden bg-white">
+                          {(() => {
+                            const hasLogo =
+                              job.companyLogo ||
+                              (job.company && job.company.logo);
+                            const rawLogo =
+                              job.companyLogo || job.company?.logo;
+                            const logoSrc =
+                              rawLogo && rawLogo.startsWith("/uploads/")
+                                ? `${getApiUrl()}${rawLogo}`
+                                : rawLogo;
+                            return hasLogo ? (
+                              <img
+                                src={logoSrc}
+                                alt={`${(typeof job.company === "string" ? job.company : job.company?.name) || "Company"} logo`}
+                                className="w-full h-full object-contain"
+                                onLoad={(e) => {
+                                  e.target.style.display = "block";
+                                  const fallback =
+                                    e.target.parentElement.querySelector(
+                                      ".logo-fallback",
+                                    );
+                                  if (fallback) fallback.style.display = "none";
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  const fallback =
+                                    e.target.parentElement.querySelector(
+                                      ".logo-fallback",
+                                    );
+                                  if (fallback) fallback.style.display = "flex";
+                                }}
+                              />
+                            ) : null;
+                          })()}
+                          <div
+                            className={cn(
+                              "logo-fallback flex h-full w-full items-center justify-center text-lg font-bold text-gray-400 bg-gray-50 rounded-md",
+                              job.companyLogo ||
+                                (job.company && job.company.logo)
+                                ? "hidden"
+                                : "flex",
+                            )}
+                          >
+                            {(
+                              (typeof job.company === "string"
+                                ? job.company
+                                : job.company?.name) || "Company"
+                            )
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
                         </div>
 
-                        {/* Bottom Section */}
-                        <div className="flex items-center justify-between mt-auto pt-2">
-                          <div className="flex items-center gap-2 overflow-hidden pr-2">
-                            <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs sm:text-sm rounded-md font-medium whitespace-nowrap font-['Roboto']">
-                              {job.salary}
-                            </span>
-                            <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs sm:text-sm rounded-md font-medium whitespace-nowrap truncate font-['Roboto']">
-                              {job.location}
-                            </span>
+                        {/* Right Content Section */}
+                        <div className="flex flex-col flex-1 min-w-0 h-full justify-between py-0.5">
+                          <div className="mb-2">
+                            <h3 className="font-['Open_Sans'] text-lg sm:text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug mb-1">
+                              {job.title}
+                            </h3>
+                            <p className="text-sm text-gray-500 truncate font-['Roboto']">
+                              {typeof job.company === "string"
+                                ? job.company
+                                : job.company?.name || "Company"}
+                            </p>
                           </div>
-                          <button
-                            type="button"
-                            className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${
-                              savedJobIds.includes(job.id)
-                                ? "border-red-500 text-red-500 bg-red-50"
-                                : "border-gray-200 text-gray-400 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
-                            }`}
-                            onClick={(e) => toggleSaveJob(e, job.id)}
-                            title={savedJobIds.includes(job.id) ? "Bỏ lưu" : "Lưu việc làm"}
-                          >
-                            <Heart className={`w-4 h-4 ${savedJobIds.includes(job.id) ? "fill-red-500" : ""}`} />
-                          </button>
+
+                          <div className="flex items-center justify-between mt-auto">
+                            <div className="flex items-center gap-2 overflow-hidden pr-2">
+                              <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs sm:text-sm rounded-md font-medium whitespace-nowrap font-['Roboto']">
+                                {job.salary}
+                              </span>
+                              <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs sm:text-sm rounded-md font-medium whitespace-nowrap truncate font-['Roboto']">
+                                {job.location}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${
+                                savedJobIds.includes(job.id)
+                                  ? "border-red-500 text-red-500 bg-red-50"
+                                  : "border-gray-200 text-gray-400 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
+                              }`}
+                              onClick={(e) => toggleSaveJob(e, job.id)}
+                              title={
+                                savedJobIds.includes(job.id)
+                                  ? "Bỏ lưu"
+                                  : "Lưu việc làm"
+                              }
+                            >
+                              <Heart
+                                className={`w-4 h-4 ${savedJobIds.includes(job.id) ? "fill-red-500" : ""}`}
+                              />
+                            </button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -686,7 +737,7 @@ const JobSearchPage = () => {
               )}
             </div>
 
-            {!loading && !error && totalPages > 1 && (
+            {!loading && !error && totalJobs > 0 && (
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -721,12 +772,12 @@ const JobSearchPage = () => {
               ))}
             </div>
           ) : topCompanies.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {topCompanies.map((company) => (
                 <Link key={company._id} to={`/companies/${company._id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer h-full border border-gray-100 hover:border-red-200">
-                    <CardContent className="p-6 flex flex-col items-center text-center justify-center h-full">
-                      <div className="h-16 w-16 mb-4 rounded-lg bg-white border border-gray-100 p-2 flex items-center justify-center overflow-hidden">
+                  <Card className="hover:shadow-md transition-all cursor-pointer h-full border border-gray-200 hover:ring-red-500 hover:border-transparent flex flex-col p-4 bg-white">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className="flex-none w-20 h-20 min-w-[5rem] min-h-[5rem] rounded-xl bg-white border border-gray-200 p-1 flex items-center justify-center overflow-hidden">
                         {company.logo ? (
                           <img
                             src={
@@ -743,16 +794,42 @@ const JobSearchPage = () => {
                           </div>
                         )}
                       </div>
-                      <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm">
-                        {company.name}
-                      </h3>
-                    </CardContent>
+                      <div className="flex flex-col flex-1 min-w-0 justify-center">
+                        <h3 className="font-bold text-gray-900 uppercase line-clamp-2 leading-snug text-base">
+                          {company.name}
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                          {company.industry || "Nhiều lĩnh vực"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto pt-2 flex items-center text-sm font-medium text-gray-800">
+                      <Briefcase className="w-4 h-4 mr-2 text-gray-600" />
+                      {company.jobsCount
+                        ? `${company.jobsCount} việc làm`
+                        : "Đang tuyển dụng"}
+                    </div>
                   </Card>
                 </Link>
               ))}
             </div>
           ) : (
             <p className="text-gray-500 italic">Chưa có công ty nào.</p>
+          )}
+
+          {!loadingCompanies && companiesPagination.total > 0 && (
+            <div className="mt-8">
+              <Pagination
+                currentPage={companiesPage}
+                totalPages={companiesPagination.totalPages}
+                onPageChange={(page) => setCompaniesPage(page)}
+                loading={loadingCompanies}
+                totalItems={companiesPagination.total}
+                limit={companiesPagination.limit}
+                itemLabel="công ty"
+              />
+            </div>
           )}
         </div>
       </div>

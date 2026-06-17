@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { buildApiUrl } from '../../utils/api';
-import { CAREER_FIELD_OPTIONS, getSuggestedSkillsByCareerField } from '../../utils/careerSkillSuggestions';
 const SignupPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -9,29 +8,6 @@ const SignupPage = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',
-    careerField: '',
-    currentLocation: '',
-    educationEntries: [{
-      id: 1,
-      qualification: '',
-      fieldOfStudy: '',
-      universityName: '',
-      graduationYear: '',
-      cgpaPercentage: ''
-    }],
-    currentStatus: '',
-    primarySkills: [],
-    workExperienceEntries: [{
-      id: 1,
-      yearsOfExperience: '',
-      company: '',
-      position: '',
-      startDate: '',
-      endDate: '',
-      isCurrentlyWorking: false,
-      description: ''
-    }]
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -39,23 +15,7 @@ const SignupPage = () => {
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
       const firstErrorKey = Object.keys(errors)[0];
-      let elementId = firstErrorKey;
-      if (firstErrorKey.startsWith('education_')) {
-        const parts = firstErrorKey.split('_');
-        if (parts.length === 3) {
-          elementId = `${parts[2]}_${parts[1]}`;
-        }
-      }
-      if (firstErrorKey.startsWith('work_')) {
-        const parts = firstErrorKey.split('_');
-        if (parts.length >= 3) {
-          elementId = `${parts[2]}_${parts[1]}`;
-        }
-      }
-      let element = document.getElementById(elementId) || document.querySelector(`[name="${elementId}"]`);
-      if (!element) {
-        element = document.getElementById(firstErrorKey) || document.querySelector(`[name="${firstErrorKey}"]`);
-      }
+      let element = document.getElementById(firstErrorKey) || document.querySelector(`[name="${firstErrorKey}"]`);
       if (element) {
         element.scrollIntoView({
           behavior: 'smooth',
@@ -65,15 +25,6 @@ const SignupPage = () => {
       }
     }
   }, [errors]);
-  const qualificationOptions = ['Trung học phổ thông', 'Cao đẳng/Chứng chỉ', 'Cử nhân', 'Thạc sĩ', 'Tiến sĩ', 'Khác'];
-  const experienceOptions = ['Mới ra trường', '0-1 năm', '1-3 năm', '3-5 năm', '5-7 năm', '7-10 năm', 'Trên 10 năm'];
-  const currentStatusOptions = ['Mới ra trường', 'Sinh viên', 'Đang đi làm'];
-  const suggestedSkills = getSuggestedSkillsByCareerField(formData.careerField);
-  const currentYear = new Date().getFullYear();
-  const graduationYears = [];
-  for (let year = currentYear; year >= 1980; year--) {
-    graduationYears.push(year);
-  }
   const handleInputChange = e => {
     const {
       name,
@@ -90,161 +41,13 @@ const SignupPage = () => {
       }));
     }
   };
-  const addEducationEntry = () => {
-    const newId = Math.max(...formData.educationEntries.map(entry => entry.id)) + 1;
-    setFormData(prev => ({
-      ...prev,
-      educationEntries: [...prev.educationEntries, {
-        id: newId,
-        qualification: '',
-        fieldOfStudy: '',
-        universityName: '',
-        graduationYear: '',
-        cgpaPercentage: ''
-      }]
-    }));
-  };
-  const removeEducationEntry = id => {
-    if (formData.educationEntries.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        educationEntries: prev.educationEntries.filter(entry => entry.id !== id)
-      }));
-      setErrors(prev => {
-        const newErrors = {
-          ...prev
-        };
-        delete newErrors[`education_${id}_qualification`];
-        delete newErrors[`education_${id}_fieldOfStudy`];
-        delete newErrors[`education_${id}_universityName`];
-        delete newErrors[`education_${id}_graduationYear`];
-        return newErrors;
-      });
-    }
-  };
-  const handleEducationChange = (id, field, value) => {
-    if (field === 'cgpaPercentage' && value) {
-      const numericValue = value.replace(/[^0-9.]/g, '');
-      const parts = numericValue.split('.');
-      if (parts.length > 2) {
-        return;
-      }
-      const gpa = parseFloat(numericValue);
-      if (!Number.isNaN(gpa) && gpa > 4) {
-        setErrors(prev => ({
-          ...prev,
-          [`education_${id}_cgpaPercentage`]: 'GPA phải nhỏ hơn hoặc bằng 4.0'
-        }));
-        return;
-      }
-      value = numericValue;
-    }
-    setFormData(prev => ({
-      ...prev,
-      educationEntries: prev.educationEntries.map(entry => entry.id === id ? {
-        ...entry,
-        [field]: value
-      } : entry)
-    }));
-    const errorKey = `education_${id}_${field}`;
-    if (errors[errorKey]) {
-      setErrors(prev => ({
-        ...prev,
-        [errorKey]: ''
-      }));
-    }
-  };
-  const addSkill = skill => {
-    if (skill && !formData.primarySkills.includes(skill)) {
-      setFormData(prev => ({
-        ...prev,
-        primarySkills: [...prev.primarySkills, skill]
-      }));
-    }
-  };
-  const removeSkill = skillToRemove => {
-    setFormData(prev => ({
-      ...prev,
-      primarySkills: prev.primarySkills.filter(skill => skill !== skillToRemove)
-    }));
-  };
-  const addWorkExperience = () => {
-    const newId = Math.max(...formData.workExperienceEntries.map(entry => entry.id)) + 1;
-    setFormData(prev => ({
-      ...prev,
-      workExperienceEntries: [...prev.workExperienceEntries, {
-        id: newId,
-        yearsOfExperience: '',
-        company: '',
-        position: '',
-        startDate: '',
-        endDate: '',
-        isCurrentlyWorking: false,
-        description: ''
-      }]
-    }));
-  };
-  const removeWorkExperience = id => {
-    if (formData.workExperienceEntries.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        workExperienceEntries: prev.workExperienceEntries.filter(entry => entry.id !== id)
-      }));
-    }
-  };
-  const handleWorkExperienceChange = (id, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      workExperienceEntries: prev.workExperienceEntries.map(entry => entry.id === id ? {
-        ...entry,
-        [field]: value,
-        ...(field === 'isCurrentlyWorking' && value ? {
-          endDate: ''
-        } : {})
-      } : entry)
-    }));
-    const errorKey = `work_${id}_${field}`;
-    if (errors[errorKey]) {
-      setErrors(prev => ({
-        ...prev,
-        [errorKey]: ''
-      }));
-    }
-  };
   const validateForm = () => {
     const newErrors = {};
     if (!formData.fullName.trim()) newErrors.fullName = 'Họ và tên là bắt buộc';
     if (!formData.email.trim()) newErrors.email = 'Email là bắt buộc';
     if (!formData.password.trim()) newErrors.password = 'Mật khẩu là bắt buộc';
     if (!formData.confirmPassword.trim()) newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu của bạn';
-    if (!formData.currentLocation.trim()) newErrors.currentLocation = 'Nơi ở hiện tại là bắt buộc';
-    if (!formData.currentStatus) newErrors.currentStatus = 'Trạng thái hiện tại là bắt buộc';
-    if (!formData.careerField) newErrors.careerField = 'Vui lòng chọn lĩnh vực/ngành nghề';
-    if (!formData.primarySkills || formData.primarySkills.length === 0) newErrors.primarySkills = 'Cần ít nhất một kỹ năng';
-    if (!formData.educationEntries || formData.educationEntries.length === 0) {
-      newErrors.education = 'Cần ít nhất một mục học vấn';
-    } else {
-      formData.educationEntries.forEach(education => {
-        if (!education.qualification) {
-          newErrors[`education_${education.id}_qualification`] = 'Bằng cấp là bắt buộc';
-        }
-        if (!education.fieldOfStudy.trim()) {
-          newErrors[`education_${education.id}_fieldOfStudy`] = 'Ngành học là bắt buộc';
-        }
-        if (!education.universityName.trim()) {
-          newErrors[`education_${education.id}_universityName`] = 'Tên trường là bắt buộc';
-        }
-        if (!education.graduationYear) {
-          newErrors[`education_${education.id}_graduationYear`] = 'Năm tốt nghiệp là bắt buộc';
-        }
-        if (education.cgpaPercentage) {
-          const gpa = parseFloat(education.cgpaPercentage);
-          if (Number.isNaN(gpa) || gpa < 0 || gpa > 4) {
-            newErrors[`education_${education.id}_cgpaPercentage`] = 'GPA phải trong khoảng 0 đến 4.0';
-          }
-        }
-      });
-    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
       newErrors.email = 'Vui lòng nhập địa chỉ email hợp lệ';
@@ -269,30 +72,7 @@ const SignupPage = () => {
       formDataToSubmit.append('fullName', formData.fullName.trim());
       formDataToSubmit.append('email', formData.email.trim().toLowerCase());
       formDataToSubmit.append('password', formData.password);
-      formDataToSubmit.append('phone', formData.phone.trim());
-      formDataToSubmit.append('currentLocation', formData.currentLocation.trim());
-      formDataToSubmit.append('currentStatus', formData.currentStatus);
-      formDataToSubmit.append('careerField', formData.careerField);
-      formDataToSubmit.append('role', 'applicant');
-      const educationData = formData.educationEntries.map(entry => ({
-        qualification: entry.qualification,
-        fieldOfStudy: entry.fieldOfStudy.trim(),
-        universityName: entry.universityName.trim(),
-        graduationYear: entry.graduationYear,
-        cgpaPercentage: entry.cgpaPercentage.trim()
-      }));
-      formDataToSubmit.append('educationEntries', JSON.stringify(educationData));
-      const workData = formData.workExperienceEntries.map(entry => ({
-        yearsOfExperience: entry.yearsOfExperience,
-        company: entry.company.trim(),
-        position: entry.position.trim(),
-        startDate: entry.startDate,
-        endDate: entry.endDate,
-        isCurrentlyWorking: entry.isCurrentlyWorking,
-        description: entry.description.trim()
-      }));
-      formDataToSubmit.append('workExperienceEntries', JSON.stringify(workData));
-      formDataToSubmit.append('primarySkills', JSON.stringify(formData.primarySkills));
+
       const response = await fetch(buildApiUrl('/api/auth/register'), {
         method: 'POST',
         body: formDataToSubmit
@@ -353,7 +133,7 @@ const SignupPage = () => {
             </h1>
           </div>
           <p className="text-sm md:text-base leading-relaxed font-medium opacity-90">
-            Ba điều <span className="font-bold">FINDME</span> chắc chắn sẽ cho bạn: cơ hội không ngừng sáng tạo, thách thức để khẳng định bản thân, và điều kiện để học hỏi, phát triển.
+            Với <span className="font-bold">FINDME</span>, bạn sẽ dễ dàng tiếp cận hàng ngàn cơ hội việc làm hấp dẫn, kết nối trực tiếp với các nhà tuyển dụng hàng đầu và tạo bước đệm vững chắc để phát triển sự nghiệp.
           </p>
         </div>
       </div>
@@ -423,304 +203,6 @@ const SignupPage = () => {
               {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
             </div>
 
-            {}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                Số điện thoại <span className="text-gray-400">(Không bắt buộc)</span>
-              </label>
-              <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel-national" value={formData.phone} onChange={handleInputChange} placeholder="VD: 0901234567" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
-            </div>
-          </div>
-
-          {}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white transition-colors duration-300 border-b border-gray-200 pb-2">
-              Thông tin hồ sơ
-            </h2>
-            
-            {}
-            <div>
-              <label htmlFor="currentLocation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                Nơi ở hiện tại / Thành phố <span className="text-red-500">*</span>
-              </label>
-              <input id="currentLocation" name="currentLocation" type="text" required value={formData.currentLocation} onChange={handleInputChange} placeholder="VD: Quận 1, TP. Hồ Chí Minh" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
-              {errors.currentLocation && <p className="mt-1 text-sm text-red-600">{errors.currentLocation}</p>}
-            </div>
-
-            {}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white transition-colors duration-300 border-b border-gray-200 pb-2 flex-1 mr-4">
-                  Thông tin học vấn
-                </h3>
-                <button type="button" onClick={addEducationEntry} className="bg-[#EE0000] text-white hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium font-['Open_Sans'] transition-colors flex items-center gap-2 shrink-0">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Thêm học vấn
-                </button>
-              </div>
-              
-              {formData.educationEntries.map((education, index) => <div key={education.id} className="space-y-4 p-6 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-300 font-['Open_Sans']">
-                      Học vấn {index + 1}
-                    </h4>
-                    {formData.educationEntries.length > 1 && <button type="button" onClick={() => removeEducationEntry(education.id)} className="text-red-600 hover:text-red-800 p-1 rounded-lg hover:bg-red-50 transition-colors dark:hover:bg-red-900 dark:hover:text-red-300" title="Xóa mục học vấn này">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>}
-                  </div>
-
-                  {}
-                  <div>
-                      <label htmlFor={`qualification_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                      Bằng cấp <span className="text-red-500">*</span>
-                    </label>
-                      <select id={`qualification_${education.id}`} name={`qualification_${education.id}`} required value={education.qualification} onChange={e => handleEducationChange(education.id, 'qualification', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors">
-                      <option value="">Chọn bằng cấp</option>
-                      {qualificationOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                    </select>
-                    {errors[`education_${education.id}_qualification`] && <p className="mt-1 text-sm text-red-600">{errors[`education_${education.id}_qualification`]}</p>}
-                  </div>
-
-                  {}
-                  <div>
-                    <label htmlFor={`fieldOfStudy_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                      Ngành học / Chuyên ngành <span className="text-red-500">*</span>
-                    </label>
-                    <input id={`fieldOfStudy_${education.id}`} name={`fieldOfStudy_${education.id}`} type="text" required value={education.fieldOfStudy} onChange={e => handleEducationChange(education.id, 'fieldOfStudy', e.target.value)} placeholder="VD: Công nghệ thông tin, Kế toán, Marketing" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
-                    {errors[`education_${education.id}_fieldOfStudy`] && <p className="mt-1 text-sm text-red-600">{errors[`education_${education.id}_fieldOfStudy`]}</p>}
-                  </div>
-
-                  {}
-                  <div>
-                    <label htmlFor={`universityName_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                      Tên trường đại học / cao đẳng <span className="text-red-500">*</span>
-                    </label>
-                    <input id={`universityName_${education.id}`} name={`universityName_${education.id}`} type="text" required value={education.universityName} onChange={e => handleEducationChange(education.id, 'universityName', e.target.value)} placeholder="VD: Đại học Bách Khoa TP.HCM, Đại học Quốc gia Hà Nội" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
-                    {errors[`education_${education.id}_universityName`] && <p className="mt-1 text-sm text-red-600">{errors[`education_${education.id}_universityName`]}</p>}
-                  </div>
-
-                  {}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {}
-                    <div>
-                      <label htmlFor={`graduationYear_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                        Năm tốt nghiệp <span className="text-red-500">*</span>
-                      </label>
-                      <select id={`graduationYear_${education.id}`} name={`graduationYear_${education.id}`} required value={education.graduationYear} onChange={e => handleEducationChange(education.id, 'graduationYear', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors">
-                        <option value="">Chọn năm</option>
-                        {graduationYears.map(year => <option key={year} value={year}>{year}</option>)}
-                      </select>
-                      {errors[`education_${education.id}_graduationYear`] && <p className="mt-1 text-sm text-red-600">{errors[`education_${education.id}_graduationYear`]}</p>}
-                    </div>
-
-                    {}
-                    <div>
-                      <label htmlFor={`cgpaPercentage_${education.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-1">
-                        GPA
-                      </label>
-                      <input id={`cgpaPercentage_${education.id}`} name={`cgpaPercentage_${education.id}`} type="text" inputMode="decimal" value={education.cgpaPercentage} onChange={e => handleEducationChange(education.id, 'cgpaPercentage', e.target.value)} placeholder="Ví dụ: 3.6 / 4.0" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
-                      <p className="mt-1 text-xs text-gray-500 font-['Roboto']">Nhập GPA của bạn</p>
-                      {errors[`education_${education.id}_cgpaPercentage`] && <p className="mt-1 text-sm text-red-600">{errors[`education_${education.id}_cgpaPercentage`]}</p>}
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-500 font-['Roboto']">
-                        Thêm nhiều bằng cấp nếu bạn có bằng từ các trường khác nhau hoặc nhiều trình độ học vấn.
-                      </p>
-                </div>)}
-              
-              
-            </div>
-
-            {}
-            <div>
-              <label htmlFor="currentStatus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                Trạng thái hiện tại <span className="text-red-500">*</span>
-              </label>
-              <select id="currentStatus" name="currentStatus" required value={formData.currentStatus} onChange={handleInputChange} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors">
-                <option value="">Chọn trạng thái</option>
-                {currentStatusOptions.map(option => <option key={option} value={option}>{option}</option>)}
-              </select>
-              {errors.currentStatus && <p className="mt-1 text-sm text-red-600">{errors.currentStatus}</p>}
-            </div>
-
-            {}
-            <div>
-              <label htmlFor="careerField" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                Lĩnh vực / Ngành nghề <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="careerField"
-                name="careerField"
-                required
-                value={formData.careerField}
-                onChange={handleInputChange}
-                className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors"
-              >
-                <option value="">Chọn lĩnh vực</option>
-                {CAREER_FIELD_OPTIONS.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              {errors.careerField && <p className="mt-1 text-sm text-red-600">{errors.careerField}</p>}
-              <p className="mt-1 text-xs text-gray-500 font-['Roboto']">Dùng để gợi ý kỹ năng phù hợp và phân loại hồ sơ đúng ngành.</p>
-            </div>
-
-            {}
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                Kỹ năng chính <span className="text-red-500">*</span>
-              </label>
-              
-              {}
-              {formData.primarySkills.length > 0 && <div className="flex flex-wrap gap-2 p-3 border border-gray-200 rounded-lg bg-gray-50 min-h-[60px] dark:border-gray-700 dark:bg-gray-800">
-                  {formData.primarySkills.map((skill, index) => <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-black text-white text-sm rounded-full font-['Roboto'] dark:bg-white dark:text-black">
-                      {skill}
-                      <button type="button" onClick={() => removeSkill(skill)} className="ml-1 text-gray-300 hover:text-white transition-colors dark:text-gray-400 dark:hover:text-gray-200">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </span>)}
-                </div>}
-              
-              {}
-              <div className="flex gap-2">
-                <input type="text" placeholder="Nhập một kỹ năng và nhấn Enter" className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" onKeyPress={e => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const skill = e.target.value.trim();
-                  if (skill) {
-                    addSkill(skill);
-                    e.target.value = '';
-                  }
-                }
-              }} />
-                <button type="button" onClick={e => {
-                const input = e.target.parentElement.querySelector('input');
-                const skill = input.value.trim();
-                if (skill) {
-                  addSkill(skill);
-                  input.value = '';
-                }
-              }} className="px-4 py-3 bg-[#EE0000] text-white rounded-lg hover:bg-red-700 transition-colors font-['Open_Sans'] text-sm">
-                  Thêm
-                </button>
-              </div>
-              
-              {}
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 font-['Open_Sans'] mb-2">Kỹ năng phổ biến (nhấn để thêm):</p>
-                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                  {suggestedSkills.filter(skill => !formData.primarySkills.includes(skill)).slice(0, 30).map(skill => <button key={skill} type="button" onClick={() => addSkill(skill)} className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:bg-gray-100 hover:border-gray-400 transition-colors font-['Roboto'] text-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:border-gray-500">
-                      + {skill}
-                    </button>)}
-                </div>
-              </div>
-              
-              {errors.primarySkills && <p className="mt-1 text-sm text-red-600">{errors.primarySkills}</p>}
-              <p className="text-sm text-gray-500 font-['Roboto']">
-                Thêm các kỹ năng thể hiện rõ nhất chuyên môn của bạn. Bạn có thể nhập kỹ năng riêng hoặc chọn từ danh sách gợi ý.
-              </p>
-            </div>
-
-            {}
-            {formData.currentStatus === 'Đang đi làm' && <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white transition-colors duration-300 border-b border-gray-200 pb-2 flex-1 mr-4">
-                    Chi tiết kinh nghiệm làm việc <span className="text-gray-400 text-sm font-normal">(Không bắt buộc)</span>
-                  </h3>
-                  <button type="button" onClick={addWorkExperience} className="bg-[#EE0000] text-white hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium font-['Open_Sans'] transition-colors flex items-center gap-2 shrink-0">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Thêm kinh nghiệm
-                  </button>
-                </div>
-                
-                {formData.workExperienceEntries.map((experience, index) => <div key={experience.id} className="space-y-4 p-6 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-300 font-['Open_Sans']">
-                        Kinh nghiệm {index + 1}
-                      </h4>
-                      {formData.workExperienceEntries.length > 1 && <button type="button" onClick={() => removeWorkExperience(experience.id)} className="text-red-600 hover:text-red-800 p-1 rounded-lg hover:bg-red-50 transition-colors dark:hover:bg-red-900 dark:hover:text-red-300" title="Xóa kinh nghiệm này">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>}
-                    </div>
-
-                    {}
-                    <div>
-                      <label htmlFor={`yearsOfExperience_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                        Số năm kinh nghiệm cho vị trí này
-                      </label>
-                      <select id={`yearsOfExperience_${experience.id}`} value={experience.yearsOfExperience} onChange={e => handleWorkExperienceChange(experience.id, 'yearsOfExperience', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors">
-                        <option value="">Chọn số năm kinh nghiệm</option>
-                        {experienceOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                      </select>
-                    </div>
-
-                    {}
-                    <div>
-                      <label htmlFor={`company_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                        Tên công ty
-                      </label>
-                      <input id={`company_${experience.id}`} type="text" value={experience.company} onChange={e => handleWorkExperienceChange(experience.id, 'company', e.target.value)} placeholder="VD: FPT, VNG, Viettel, MoMo" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
-                    </div>
-
-                    {}
-                    <div>
-                      <label htmlFor={`position_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                        Vị trí / Vai trò
-                      </label>
-                      <input id={`position_${experience.id}`} type="text" value={experience.position} onChange={e => handleWorkExperienceChange(experience.id, 'position', e.target.value)} placeholder="ví dụ: Kỹ sư phần mềm, Chuyên viên phân tích dữ liệu, Quản lý dự án" className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
-                    </div>
-
-                    {}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {}
-                      <div>
-                    <label htmlFor={`startDate_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                          Ngày bắt đầu
-                        </label>
-                        <input id={`startDate_${experience.id}`} type="month" value={experience.startDate} onChange={e => handleWorkExperienceChange(experience.id, 'startDate', e.target.value)} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors" />
-                      </div>
-
-                      {}
-                      <div>
-                        <label htmlFor={`endDate_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                          Ngày kết thúc
-                        </label>
-                        <div className="space-y-2">
-                          <input id={`endDate_${experience.id}`} type="month" value={experience.endDate} onChange={e => handleWorkExperienceChange(experience.id, 'endDate', e.target.value)} disabled={experience.isCurrentlyWorking} className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors disabled:opacity-60 disabled:cursor-not-allowed" />
-                          <label className="flex items-center text-sm text-gray-600 font-['Roboto']">
-                            <input type="checkbox" checked={experience.isCurrentlyWorking} onChange={e => handleWorkExperienceChange(experience.id, 'isCurrentlyWorking', e.target.checked)} className="mr-2 rounded border-gray-300 text-black focus:ring-black dark:border-gray-600 dark:text-white dark:focus:ring-gray-300" />
-                            Tôi hiện đang làm việc tại đây
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-
-                    {}
-                    <div>
-                      <label htmlFor={`description_${experience.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-['Open_Sans'] mb-2">
-                        Mô tả công việc / Trách nhiệm
-                      </label>
-                      <textarea id={`description_${experience.id}`} rows="3" value={experience.description} onChange={e => handleWorkExperienceChange(experience.id, 'description', e.target.value)} placeholder="Mô tả ngắn gọn trách nhiệm chính và thành tựu của bạn..." className="block w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/80 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-100 dark:focus:ring-red-950 focus:border-[#EE0000] font-['Roboto'] transition-colors resize-vertical" />
-                    </div>
-                    <p className="text-sm text-gray-500 font-['Roboto']">
-                   Việc thêm chi tiết kinh nghiệm làm việc giúp nhà tuyển dụng hiểu rõ hơn về nền tảng của bạn và cải thiện khả năng phù hợp công việc. Bạn có thể thêm nhiều vai trò nếu đã làm ở nhiều công ty khác nhau.
-                    </p>
-                  </div>)}
-                
-                
-              </div>}
           </div>
 
           

@@ -252,7 +252,7 @@ export default function ForgotPasswordPage() {
             </h1>
           </div>
           <p className="text-sm md:text-base leading-relaxed font-medium opacity-90">
-            Ba điều <span className="font-bold">FINDME</span> chắc chắn sẽ cho bạn: cơ hội không ngừng sáng tạo, thách thức để khẳng định bản thân, và điều kiện để học hỏi, phát triển.
+            Với <span className="font-bold">FINDME</span>, bạn sẽ dễ dàng tiếp cận hàng ngàn cơ hội việc làm hấp dẫn, kết nối trực tiếp với các nhà tuyển dụng hàng đầu và tạo bước đệm vững chắc để phát triển sự nghiệp.
           </p>
         </div>
       </div>

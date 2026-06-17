@@ -19,11 +19,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr] gap-10">
           <div>
             <div className="flex items-center gap-3">
-              <img src={findmeLogo} alt="findme" className="w-9 h-9" />
+              
               <span className="text-3xl font-bold tracking-wide text-red-600 dark:text-red-400 font-['Open_Sans']">FINDME</span>
             </div>
             <p className="mt-2 text-sm font-semibold tracking-wide uppercase text-gray-800 dark:text-gray-200 font-['Open_Sans']">
-              Nền tảng tuyển dụng nội bộ doanh nghiệp
+              Nền tảng tuyển dụng
             </p>
             <a href="mailto:tuyendung@findme.com.vn" className="mt-4 inline-block text-sm underline text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 font-['Roboto']">
               tuyendung@findme.com.vn
@@ -64,9 +64,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-8 pt-5 border-t border-red-100 dark:border-red-900/60 text-sm text-gray-500 dark:text-gray-400 font-['Roboto']">
-          © VIETTEL {year} | FINDME | CHÍNH SÁCH BẢO MẬT | ĐIỀU KHOẢN SỬ DỤNG
-        </div>
+        
       </div>
     </footer>;
 };

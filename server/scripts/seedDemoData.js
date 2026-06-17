@@ -725,6 +725,13 @@ async function seedDemoData() {
       field: "Hệ thống - DevOps",
       skills: ["AWS", "Docker", "Kubernetes", "CI/CD", "Linux", "Bash"],
     },
+    {
+      firstName: "Phát",
+      lastName: "Lê Minh",
+      email: "minhphat@findme.com",
+      field: "Công nghệ thông tin",
+      skills: ["ReactJS", "NodeJS", "JavaScript", "MongoDB", "Express"],
+    },
   ];
 
   const applicantAvatars = [
@@ -743,6 +750,7 @@ async function seedDemoData() {
     "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=150&h=150&fit=crop",
     "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=150&h=150&fit=crop",
     "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150&h=150&fit=crop",
+    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=150&h=150&fit=crop",
   ];
 
   const applicants = [];
@@ -1110,6 +1118,90 @@ async function seedDemoData() {
   }
   console.log(`Seeded ${applications.length} Applications.`);
 
+  // Create 5 applications for the new applicant (applicants[15])
+  if (applicants.length > 15) {
+    console.log("Seeding 5 additional Applications for the new applicant...");
+    const extraCandidate = applicants[15];
+    const extraResume = resumes[15] || resumes[0];
+    const extraStatuses = [
+      "offer_accepted",
+      "interview_scheduled",
+      "rejected",
+      "under_review",
+      "submitted",
+    ];
+
+    for (let i = 0; i < extraStatuses.length; i++) {
+      const job = jobs[i + 15]; // Use different jobs
+      const status = extraStatuses[i];
+      const score = 85;
+
+      const appData = {
+        job: job._id,
+        applicant: extraCandidate._id,
+        status: status,
+        personalInfo: {
+          firstName: extraCandidate.firstName,
+          lastName: extraCandidate.lastName,
+          email: extraCandidate.email,
+          phone: extraCandidate.phone,
+        },
+        useProfileResume: true,
+        profileResumeId: extraResume._id,
+        skills: extraCandidate.profile.skills,
+        experience: "mid-level",
+        expectedSalary: { min: 20000000, max: 30000000, currency: "VND" },
+        coverLetter: `Tôi rất mong muốn được làm việc tại công ty. Đây là đơn ứng tuyển demo thứ ${i + 1}.`,
+        aiProcessing: {
+          status: "done",
+          startedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+          finishedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 3000),
+          engine: "scan_cv",
+        },
+        aiAnalysis: {
+          resumeScore: score,
+          skillsMatch: score,
+          experienceMatch: score,
+          overallScore: score,
+          keyStrengths: ["Kỹ năng phù hợp tốt."],
+          potentialConcerns: [],
+          recommendedQuestions: ["Hỏi về dự án ReactJS?"],
+          atsEngine: "scan_cv",
+        },
+        timeline: [
+          {
+            status: "submitted",
+            date: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+            note: "Đơn ứng tuyển đã được nộp trực tuyến.",
+          },
+        ],
+      };
+
+      if (status !== "submitted") {
+        appData.timeline.push({
+          status: status,
+          date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+          note: `Nhà tuyển dụng cập nhật trạng thái đơn sang ${status}.`,
+          updatedBy: job.postedBy,
+        });
+      }
+
+      if (status === "rejected") {
+        appData.timeline.push({
+          status: "rejected",
+          date: new Date(now.getTime() - 12 * 60 * 60 * 1000),
+          note: "Rất tiếc, hồ sơ của bạn chưa phù hợp...",
+          updatedBy: job.postedBy,
+        });
+      }
+
+      const newApp = await Application.create(appData);
+      applications.push(newApp);
+      await Job.findByIdAndUpdate(job._id, { $inc: { applicationsCount: 1 } });
+    }
+    console.log(`Seeded 5 additional Applications for the new applicant.`);
+  }
+
   // 8. Seed Interviews
   console.log("Seeding Interviews for candidate applications...");
   const interviews = [];
@@ -1120,11 +1212,19 @@ async function seedDemoData() {
         "interview_scheduled",
         "interview_confirmed",
         "interview_passed",
+        "offer_extended",
+        "offer_accepted",
+        "offer_declined",
       ].includes(app.status)
     ) {
       const jobDoc = jobs.find((j) => j._id.toString() === app.job.toString());
       const recruiterId = jobDoc.postedBy;
-      const isPassed = app.status === "interview_passed";
+      const isPassed = [
+        "interview_passed",
+        "offer_extended",
+        "offer_accepted",
+        "offer_declined",
+      ].includes(app.status);
       const isConfirmed = app.status === "interview_confirmed" || isPassed;
 
       const interviewData = {

@@ -101,16 +101,16 @@ const ApplicationsPage = () => {
     if (passFail) return passFail;
     const status = application.status;
     const texts = {
-      submitted: 'Đang chờ nhà tuyển dụng phản hồi',
-      under_review: 'Đơn đang chờ xét duyệt',
-      shortlisted: 'Đơn đang chờ xét duyệt',
-      interview_scheduled: 'Được mời phỏng vấn',
-      interview_confirmed: 'Đã xác nhận lịch phỏng vấn',
-      offer_extended: 'Đã nhận đề nghị công việc',
-      offer_accepted: 'Đã chấp nhận đề nghị',
-      offer_declined: 'Đã từ chối đề nghị',
-      rejected: 'Đơn bị từ chối',
-      withdrawn: 'Bạn đã rút đơn'
+      submitted: 'Chờ phản hồi',
+      under_review: 'Chờ xét duyệt',
+      shortlisted: 'Chờ xét duyệt',
+      interview_scheduled: 'Mời phỏng vấn',
+      interview_confirmed: 'Xác nhận PV',
+      offer_extended: 'Đề nghị việc làm',
+      offer_accepted: 'Phỏng vấn',
+      offer_declined: 'Từ chối đề nghị',
+      rejected: 'Bị từ chối',
+      withdrawn: 'Đã rút đơn'
     };
     return texts[status] || status;
   };
@@ -251,12 +251,13 @@ const ApplicationsPage = () => {
               className={HR_INPUT}
             >
               <option value="">Tất cả đơn ứng tuyển</option>
-              <option value="submitted">Đã nộp</option>
+              <option value="submitted">Chờ phản hồi</option>
               <option value="under_review">Chờ xét duyệt</option>
-              <option value="interview_scheduled">Được mời phỏng vấn</option>
-              <option value="interview_confirmed">Đã xác nhận lịch PV</option>
-              <option value="interview_passed">Đã phỏng vấn xong</option>
-              <option value="offer_extended">Đã gửi đề nghị</option>
+              <option value="interview_scheduled">Mời phỏng vấn</option>
+              <option value="interview_confirmed">Xác nhận PV</option>
+              <option value="interview_passed">Đã PV xong</option>
+              <option value="offer_extended">Đề nghị việc làm</option>
+              <option value="offer_accepted">Phỏng vấn</option>
               <option value="rejected">Bị từ chối</option>
             </select>
           </div>
@@ -311,7 +312,7 @@ const ApplicationsPage = () => {
                               {stt}
                             </TableCell>
                             <TableCell className="max-w-xs align-top">
-                              <div className="font-['Open_Sans'] text-[17px] font-medium text-foreground">
+                              <div className="font-['Open_Sans'] text-[17px] font-medium text-foreground truncate" title={application.job?.title || ''}>
                                 {application.job?.title || '—'}
                               </div>
                             </TableCell>

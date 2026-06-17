@@ -79,7 +79,7 @@ const RecruiterAuthPage = () => {
         return;
       }
       if (user.role === "admin") {
-        navigate("/admin/dashboard");
+        navigate("/admin/companies");
       } else {
         navigate("/recruiter/dashboard");
       }

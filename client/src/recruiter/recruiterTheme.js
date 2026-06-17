@@ -18,30 +18,22 @@ export function recruiterStatusBadgeClass(status) {
 
     case 'archived':
       return 'bg-muted text-muted-foreground';
-    case 'under_review':
-    case 'shortlisted':
-      return 'bg-accent text-accent-foreground';
-    case 'rejected':
-      return 'bg-destructive text-destructive-foreground';
-    case 'interview_scheduled':
-      return 'bg-primary/90 text-primary-foreground';
-    case 'interview_confirmed':
-      return 'bg-primary text-primary-foreground';
-    case 'interview_passed':
-      return 'border border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-100';
-    case 'interview_failed':
-      return 'bg-destructive text-destructive-foreground';
-    case 'completed':
-      return 'bg-muted text-foreground';
-    case 'submitted':
-      return 'bg-secondary text-secondary-foreground';
     case 'offer_accepted':
     case 'hired':
-      return 'bg-primary text-primary-foreground';
+      return 'border border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950/50 dark:text-green-300';
+    case 'under_review':
+    case 'shortlisted':
+    case 'rejected':
+    case 'interview_scheduled':
+    case 'interview_confirmed':
+    case 'interview_passed':
+    case 'interview_failed':
+    case 'completed':
+    case 'submitted':
+    case 'offer_extended':
     case 'offer_declined':
-      return 'bg-secondary text-secondary-foreground';
     case 'withdrawn':
-      return 'bg-muted/80 text-muted-foreground';
+      return 'border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300';
     default:
       return 'bg-muted/50 text-muted-foreground';
   }
